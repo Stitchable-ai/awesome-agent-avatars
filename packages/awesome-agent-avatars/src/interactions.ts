@@ -2,7 +2,7 @@
 // hover: eyes then head follow the pointer (not while a button is held)
 // click: hop · double-click: double spin + happy · drag: dangle and swing
 // rub back and forth: shy · five quick clicks: annoyed
-import type { BotAvatar, InteractionOptions } from "./types";
+import type { BotAvatar, InteractionOptions } from "./types.js";
 
 export const defaultInteractions: InteractionOptions = { follow: "hover", reach: 1.2, click: true, doubleClick: true, drag: true, pet: true, annoy: true };
 

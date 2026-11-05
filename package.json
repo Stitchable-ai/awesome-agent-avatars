@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "npm run build --workspace awesome-agent-avatars",
-    "typecheck": "tsc -p packages/awesome-agent-avatars/tsconfig.json --noEmit && tsc -p tsconfig.examples.json --noEmit",
+    "typecheck": "tsc -p packages/awesome-agent-avatars/tsconfig.json --noEmit && tsc -p tsconfig.examples.json --noEmit && npm run test:types",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node tests/browser.mjs",
     "size": "node scripts/size.mjs",
@@ -21,14 +21,17 @@
     "preview:site": "vite preview --config site/vite.config.ts",
     "dev:editor": "vite --config examples/react-editor/vite.config.ts",
     "dev:vanilla": "vite --config examples/vanilla/vite.config.ts",
-    "media": "node scripts/record-media.mjs"
+    "media": "node scripts/record-media.mjs",
+    "test:types": "tsc -p tests/types/tsconfig.json && tsc -p tests/types/tsconfig.bundler.json",
+    "check:pack": "attw --pack packages/awesome-agent-avatars --profile esm-only --exclude-entrypoints ./styles.css && publint packages/awesome-agent-avatars --strict && node scripts/check-pack.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Stitchable-ai/awesome-agent-avatars.git"
+    "url": "git+https://github.com/Stitchable-ai/awesome-agent-avatars.git"
   },
   "homepage": "https://awesome-agent-avatars.stitchable.ai",
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@dicebear/core": "10.7.0",
     "@dicebear/styles": "10.6.0",
     "@types/react": "19.3.0",
@@ -36,6 +39,7 @@
     "@vitejs/plugin-react": "6.2.1",
     "esbuild": "0.28.2",
     "playwright": "1.64.1",
+    "publint": "^0.3.25",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-nice-avatar": "1.5.0",

@@ -1,8 +1,9 @@
 // Avataaars by Pablo Stanley (free for personal and commercial use), via DiceBear.
-import definition from "@dicebear/styles/avataaars.json";
-import { colorField, dicebearStyle, variantField } from "../dicebear";
+import definition from "@dicebear/styles/avataaars.json" with { type: "json" };
+import { colorField, dicebearStyle, variantField } from "../dicebear.js";
+import type { DicebearDefinition } from "../dicebear.js";
 
-const def = definition as any;
+const def: DicebearDefinition = definition;
 const SKIN = ["#ffdbb4", "#edb98a", "#d08b5b", "#ae5d29", "#8d5524", "#614335"];
 
 export const avataaars = dicebearStyle({

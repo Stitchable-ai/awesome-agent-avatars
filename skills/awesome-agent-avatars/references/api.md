@@ -22,6 +22,18 @@
 
 `<AgentAvatar art state? glow? size? className? style? onStateChange? …createAvatar options />` (ref → `BotAvatar`), `useStyleArt(style, options?)`, `useRecipeArt(registry, recipe)`.
 
+## Types
+
+All exported from `awesome-agent-avatars`. The engine is strict TypeScript and the vocabularies are closed types: `StateName` (the 58 built-in names, plus anything you add to `CustomStateNames`), `BuiltinStateName`, `AnyStateName` (what setters accept: a known name autocompletes, any string is allowed), `ReactionName`, `AnyReactionName` (a reaction, or a face shown as a moment), `PokeName`, `PokeParams`, `FaceName`, `LookDirection`. `POKES` is `Record<PokeName, PokeDef>`, `REACTIONS` is `Record<ReactionName, ReactionDef>`, `LOOK` is `Record<LookDirection, Partial<Pose>>`, `STATE_NAMES` is the readonly list the pack is built from.
+
+Add your own state names to autocomplete (a plain string works without this):
+
+```ts
+declare module "awesome-agent-avatars" { interface CustomStateNames { deploying: true } }
+```
+
+Also: `BotAvatar`, `AvatarOptions`, `InteractionOptions`, `AgentPresence`, `StyleArt`, `AvatarStyle<O>`, `StyleOptions`, `AvatarRecipe`, `Field`, `Credit`, `Anchors`, `StyleRegistry`, `PictureStyleConfig`, `PropDef`, `MotionPack`, `StateRecipe`, `Clip`, `Key<V>`, `Ease`, `Pose`; `DicebearDefinition`, `DicebearPreset<O>` from `awesome-agent-avatars/dicebear`; `AgentAvatarProps` from `awesome-agent-avatars/react`.
+
 ## Styles
 
 `awesome-agent-avatars/styles/micah`, `/avataaars`, `/gaze` (peer: `@dicebear/core`, `@dicebear/styles`), `/nice` (peer: `react`, `react-dom`, `react-nice-avatar`), `/fluent` (`fluentStyle({ baseUrl })` to self-host). Adapter: `awesome-agent-avatars/dicebear` → `dicebearStyle`, `variantField`, `colorField`, `creditOf`.

@@ -1,8 +1,9 @@
 // Micah by Micah Lanier (CC BY 4.0), via DiceBear. Remix of "Avatar Illustration System".
-import definition from "@dicebear/styles/micah.json";
-import { colorField, dicebearStyle, variantField } from "../dicebear";
+import definition from "@dicebear/styles/micah.json" with { type: "json" };
+import { colorField, dicebearStyle, variantField } from "../dicebear.js";
+import type { DicebearDefinition } from "../dicebear.js";
 
-const def = definition as any;
+const def: DicebearDefinition = definition;
 const SKIN = ["#f9c9b6", "#e8b796", "#d39972", "#ac6651", "#8d5524", "#77311d", "#5c3a21"];
 
 export const micah = dicebearStyle({

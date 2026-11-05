@@ -103,6 +103,7 @@ agent.on("error", () => bot.error());
 | **Interactions** | Eyes, then head, follow the pointer (parallax makes flat art feel 2.5D). Click to hop, double-click to spin, drag to make it dangle and swing, rub to make it blush, click five times to annoy it. Leave it alone and it gets bored, then sleeps; hover wakes it with a stretch. |
 | **Props** | Laptop and headphones, thought dots, radar, terminal, a cursor its eyes follow, party hat and confetti, a cape, a glowing crystal, little helper copies of itself, and more. Drawn by the app, so every style gets them. Register your own. |
 | **Courtesy** | One `requestAnimationFrame` loop for all avatars; stops off screen and in hidden tabs; `prefers-reduced-motion` gives a still pose; under 56 px it plays gentle clips and shows badges only. |
+| **TypeScript** | Written in strict TypeScript; every entry ships declarations, checked under NodeNext and bundler resolution. States, reactions, pokes, faces and look directions are closed types (`StateName`, `ReactionName`, `PokeName`, `FaceName`, `LookDirection`), so they autocomplete and typos fail to compile. Setters still take any string, because a motion pack is data; name your own states in `CustomStateNames` to get them in autocomplete too. |
 
 ## Styles
 
@@ -114,8 +115,8 @@ Each style is its own import, so you only ship what you use. The art libraries a
 | `awesome-agent-avatars/styles/avataaars` | [Avataaars](https://avataaars.com/) by Pablo Stanley, via DiceBear | Free for personal and commercial use | 41.7 KB + DiceBear core |
 | `awesome-agent-avatars/styles/gaze` | [Gaze](https://www.dicebear.com) by DiceBear | CC0 1.0 | 3.6 KB + DiceBear core |
 | `awesome-agent-avatars/styles/nice` | [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) by Dapi | MIT | 34.6 KB (+ your React) |
-| `awesome-agent-avatars/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) heads and hands by Microsoft | MIT | 1.5 KB (images from a pinned CDN commit, or self-host) |
-| `awesome-agent-avatars` | the engine: motion, props, CSS | MIT | **23.7 KB**, no dependencies |
+| `awesome-agent-avatars/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) heads and hands by Microsoft | MIT | 1.3 KB (images from a pinned CDN commit, or self-host) |
+| `awesome-agent-avatars` | the engine: motion, props, CSS | MIT | **23.8 KB**, no dependencies |
 | `awesome-agent-avatars/react` | React bindings | MIT | +0.3 KB |
 
 ### Bring your own style

@@ -9,7 +9,7 @@
 //             (`hands`, e.g. Fluent's 3D 👋 and ✋). Never an arm: there is no body to attach it to.
 //  none     – half-body pictures that already have arms at their sides: a raised arm added to
 //             them always reads as a third arm.
-import type { Anchors, StyleArt } from "./types";
+import type { Anchors, StyleArt } from "./types.js";
 
 type Pt = { x: number; y: number };
 const darken = (hex: string, k: number) => {

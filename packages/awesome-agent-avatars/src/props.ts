@@ -1,7 +1,7 @@
 // App-drawn props: the same for every style. fx = around the avatar; front/back = worn, moving with the head.
 // Register more with registerProp(). Classes are prefixed aav- (see css.ts).
-import { armHTML } from "./arm";
-import type { Anchors, StyleArt } from "./types";
+import { armHTML } from "./arm.js";
+import type { Anchors, StyleArt } from "./types.js";
 /** `anchored` props depend on the style's anchors and are redrawn when the art changes. */
 export interface PropDef { layer?: "fx" | "front" | "back"; badge?: 1 | boolean; anchored?: boolean; html: string | ((avatar: { miniArt(): string; artStyle: StyleArt; anchors?: Anchors }) => string) }
 const mini = '<i class="aav-mini"><b class="aav-mini-art">{ART}</b></i>';

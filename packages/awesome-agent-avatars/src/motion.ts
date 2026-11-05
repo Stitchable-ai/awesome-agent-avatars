@@ -5,7 +5,19 @@
 // (pitch + looks up, yaw + looks to the viewer's right, roll + leans clockwise);
 // sq = [scaleX, scaleY]; gaze = eye direction -1..1 (y + up); lid 0 open .. 1 shut.
 // A key's ease shapes the segment that ends at that key.
-import type { Clip, MotionPack, StateRecipe } from "./types";
+import type { BuiltinStateName, Clip, MotionPack, StateRecipe } from "./types.js";
+
+/** Every state in the default pack, in the order the docs list them. `BuiltinStateName` is derived from it. */
+export const STATE_NAMES = [
+  "idle", "listening", "thinking", "streaming", "searching", "reading", "working", "coding", "running",
+  "computing", "controlling", "waiting", "blocked", "finished", "failed", "sleeping", "waking", "unavailable",
+  "happy", "excited", "laughing", "proud", "curious", "playful", "shy", "surprised", "suspicious", "angry",
+  "confused", "sad", "drowsy", "bored", "scared", "celebrate", "approving",
+  "orbit", "radar", "progress", "spawning", "loading", "dictating", "sending", "receiving", "uploading",
+  "writing", "alerting", "bouncing", "powering-down",
+  "waving", "making", "delegating", "milestone", "humming", "notifying", "dragging",
+  "intro", "showcase", "turntable",
+] as const;
 
 const R = (p: number, y: number, r: number): [number, number, number] => [p, y, r];
 const C: Record<string, Clip> = {};
@@ -161,9 +173,9 @@ C.waveA = { dur: 2.6, tracks: { rot: [[0, R(2, 4, 5)], [1.3, R(3, 5, 7)], [2.6, 
 C.capeA = { dur: 3, tracks: { rot: [[0, R(9, 0, 0)], [1.5, R(10, 0, 2)], [3, R(9, 0, 0)]], pos: [[0, [0, -3]]], sq: [[0, [1.02, 1.04]]], gaze: [[0, [0, 0.3]]] } };
 
 const WORK = ["workA", "workB", "workC", "workD"];
-const S: Record<string, StateRecipe> = {};
+const S = {} as Record<BuiltinStateName, StateRecipe>;
 // doc: [label, what it looks like, a typical agent event that triggers it]
-const st = (id: string, group: string, rec: Omit<StateRecipe, "group" | "doc">, doc: [string, string, string]) => { S[id] = { group, ...rec, doc }; };
+const st = (id: BuiltinStateName, group: string, rec: Omit<StateRecipe, "group" | "doc">, doc: [string, string, string]) => { S[id] = { group, ...rec, doc }; };
 
 // Lifecycle: what the agent is doing
 st("idle", "Lifecycle", { clips: ["idleB", "idleA", "idleB", "idleC", "idleD"], compact: ["idleB"], face: "neutral", glance: true }, ["Idle", "breathes, glances around, blinks (sometimes twice)", "nothing running"]);

@@ -1,7 +1,7 @@
 // The editing interface. Every style describes its editable identity as `fields`;
 // an app builds whatever editor UI it likes from them (see examples/react-editor).
 // Saved avatars are AvatarRecipe JSON: { v: 1, style, options }.
-import type { AvatarRecipe, AvatarStyle, Field, StyleArt, StyleOptions } from "./types";
+import type { AvatarRecipe, AvatarStyle, Field, StyleArt, StyleOptions } from "./types.js";
 
 function rand(seed: string) { let h = 2166136261; for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619); let t = h >>> 0; return () => { t = (t + 0x6d2b79f5) | 0; let e = Math.imul(t ^ (t >>> 15), 1 | t); e = (e + Math.imul(e ^ (e >>> 7), 61 | e)) ^ e; return ((e ^ (e >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -29,13 +29,23 @@ export function normalizeOptions<O extends StyleOptions>(style: AvatarStyle<O>, 
   return out as O;
 }
 
+/** The styles an app offers, by id, and the recipes they save and render. */
+export interface StyleRegistry {
+  list(): AvatarStyle[];
+  get(id: string): AvatarStyle | undefined;
+  add(style: AvatarStyle): void;
+  /** A recipe for a style: its defaults, or `options` cleaned by `normalizeOptions`. */
+  recipe(styleId: string, options?: StyleOptions, name?: string): AvatarRecipe;
+  render(recipe: AvatarRecipe): Promise<StyleArt>;
+}
+
 /** A set of styles an app offers. */
-export function createStyleRegistry(styles: AvatarStyle<any>[]) {
+export function createStyleRegistry(styles: AvatarStyle[]): StyleRegistry {
   const byId = new Map(styles.map((s) => [s.id, s]));
   return {
     list: () => [...byId.values()],
-    get: (id: string) => byId.get(id),
-    add: (s: AvatarStyle<any>) => { byId.set(s.id, s); },
+    get: (id) => byId.get(id),
+    add: (s) => { byId.set(s.id, s); },
     recipe: (styleId: string, options?: StyleOptions, name?: string): AvatarRecipe => {
       const s = byId.get(styleId); if (!s) throw new Error(`awesome-agent-avatars: unknown style "${styleId}"`);
       return { v: 1, style: styleId, options: normalizeOptions(s, options || s.defaults()), ...(name ? { name } : {}) };

@@ -15,6 +15,9 @@ await build({
   splitting: true,
   format: "esm",
   target: "es2020",
+  // the style entries import their DiceBear JSON `with { type: "json" }`, which Node and the spec
+  // require for an external JSON module; keep the attribute instead of refusing it for the target
+  supported: { "import-attributes": true },
   minify: true,
   sourcemap: true,
   chunkNames: "chunks/[name]-[hash]",

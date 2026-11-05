@@ -8,10 +8,13 @@ Thanks for helping agents look alive. Everything here is open to contribution: s
 npm ci
 npm run build          # the library (packages/awesome-agent-avatars → dist)
 npm test               # unit tests (node --test)
-npm run typecheck
+npm run typecheck      # the library, the site and examples, and the type tests in tests/types
+npm run check:pack     # the published shape: arethetypeswrong, publint, and a fresh install of the tarball
 npm run dev            # site + playground at localhost:5173, reading the library source
 npm run build:site && npx playwright install chromium && npm run test:browser
 ```
+
+The library is strict TypeScript with no `any`. `tests/types/` is compiled against the built declarations as an app sees them (NodeNext and bundler resolution); a `@ts-expect-error` line there pins something that must not compile. Relative imports in `src/` carry a `.js` extension, which the emitted declarations need under NodeNext.
 
 ## Where things live
 
@@ -37,6 +40,23 @@ States and clips are data in `motion.ts`. Keep clips starting and ending at the 
 
 ## Pull requests
 
-- `npm run build && npm test && npm run typecheck` pass, and `npm run test:browser` for anything visual.
+- `npm run build && npm test && npm run typecheck && npm run check:pack` pass, and `npm run test:browser` for anything visual.
 - Explain what a person will see differently. A screenshot or GIF helps.
 - Keep the core dependency-free and SSR-safe (no `window`/`document` at import time).
+- A new public export gets a line in `tests/types/consumer.tsx` and in `skills/awesome-agent-avatars/references/api.md`.
+
+## Releasing
+
+The package on npm is `awesome-agent-avatars` (`packages/awesome-agent-avatars`; the root is a private workspace). Releases are tag-driven: `.github/workflows/release.yml` runs the whole check suite and publishes with npm provenance when a `v*` tag is pushed.
+
+```sh
+npm version patch --workspace awesome-agent-avatars --no-git-tag-version   # or minor / major
+git commit -am "awesome-agent-avatars 0.1.1" && git tag v0.1.1 && git push --follow-tags
+```
+
+Authentication is npm trusted publishing (OIDC), so no token lives in GitHub. It is configured once on npmjs.com, after the first manual publish, under the package's Settings → Trusted publisher: GitHub Actions, repository `Stitchable-ai/awesome-agent-avatars`, workflow `release.yml`, environment `npm`. The first publish is by hand from a clean checkout:
+
+```sh
+npm ci && npm run build && npm run typecheck && npm test && npm run check:pack
+cd packages/awesome-agent-avatars && npm publish --access public   # asks for the npm 2FA code
+```

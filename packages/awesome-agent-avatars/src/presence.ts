@@ -1,12 +1,37 @@
 // Map an agent's life to avatar states, so wiring an agent takes a few calls:
 //   const p = agentPresence(avatar)
 //   p.typing(); p.sent(); p.thinking(); p.tool("web_search"); p.streaming(); p.done()
-import type { BotAvatar, StateName } from "./types";
+import type { AnyReactionName, AnyStateName, BotAvatar, BuiltinStateName } from "./types.js";
 
-type Target = BotAvatar | BotAvatar[] | ((state: string) => void);
+/** What presence drives: one avatar, several, or your own setter. */
+export type PresenceTarget = BotAvatar | BotAvatar[] | ((state: string) => void);
+
+/** An agent's life as avatar states. */
+export interface AgentPresence {
+  /** the state last set */
+  readonly state: string;
+  /** the user is typing; returns to idle after a pause */
+  typing(): void;
+  dictating(on?: boolean): void;
+  sent(): void;
+  thinking(): void;
+  /** a tool call started; the state is guessed from its name unless you pass one */
+  tool(name: string, state?: AnyStateName): void;
+  streaming(): void;
+  waiting(): void;
+  needsInput(): void;
+  approved(): void;
+  done(): void;
+  error(): void;
+  idle(): void;
+  offline(): void;
+  online(): void;
+  react(name: AnyReactionName): void;
+  set(state: AnyStateName): void;
+}
 
 /** Guess a state from a tool name (works for most agent frameworks' tool naming). */
-export function stateForTool(name: string): StateName {
+export function stateForTool(name: string): BuiltinStateName {
   const n = name.toLowerCase();
   if (/(computer|browser|click|screenshot|mouse|keyboard|navigate|playwright|desktop)/.test(n)) return "controlling";
   if (/(search|find|grep|lookup|query|retriev|rag)/.test(n)) return "searching";
@@ -20,7 +45,7 @@ export function stateForTool(name: string): StateName {
   return "working";
 }
 
-export function agentPresence(target: Target, opts: { typingIdleMs?: number } = {}) {
+export function agentPresence(target: PresenceTarget, opts: { typingIdleMs?: number } = {}): AgentPresence {
   const set = (s: string) => {
     if (typeof target === "function") target(s);
     else for (const a of Array.isArray(target) ? target : [target]) a.setState(s);
@@ -39,7 +64,7 @@ export function agentPresence(target: Target, opts: { typingIdleMs?: number } = 
     sent() { clearTimeout(typingTimer); go("sending"); },
     thinking() { go("thinking"); },
     /** a tool call started; the state is guessed from its name unless you pass one */
-    tool(name: string, state?: StateName) { go(state ?? stateForTool(name)); },
+    tool(name, state) { go(state ?? stateForTool(name)); },
     streaming() { go("streaming"); },
     waiting() { go("waiting"); },
     needsInput() { go("blocked"); },
@@ -49,7 +74,7 @@ export function agentPresence(target: Target, opts: { typingIdleMs?: number } = 
     idle() { go("idle"); },
     offline() { go("unavailable"); },
     online() { go("waking"); },
-    react(name: string) { each((a) => a.react(name)); },
+    react(name) { each((a) => a.react(name)); },
     set: go,
   };
 }

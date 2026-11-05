@@ -13,6 +13,8 @@
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"
   ],
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
@@ -49,6 +51,19 @@
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
+  "typesVersions": {
+    "*": {
+      "react": [
+        "./dist/types/react.d.ts"
+      ],
+      "dicebear": [
+        "./dist/types/dicebear.d.ts"
+      ],
+      "styles/*": [
+        "./dist/types/styles/*.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "build": "node build.mjs",
     "prepack": "node -e \"for (const f of ['LICENSE','THIRD_PARTY_NOTICES.md']) require('fs').copyFileSync('../../'+f, f)\""
@@ -77,6 +92,9 @@
       "optional": true
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "ai-agent",
     "avatar",
@@ -91,8 +109,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Stitchable-ai/awesome-agent-avatars.git",
+    "url": "git+https://github.com/Stitchable-ai/awesome-agent-avatars.git",
     "directory": "packages/awesome-agent-avatars"
   },
-  "homepage": "https://awesome-agent-avatars.stitchable.ai"
+  "homepage": "https://awesome-agent-avatars.stitchable.ai",
+  "bugs": {
+    "url": "https://github.com/Stitchable-ai/awesome-agent-avatars/issues"
+  }
 }

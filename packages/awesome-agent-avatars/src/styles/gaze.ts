@@ -1,8 +1,9 @@
 // Gaze by DiceBear (CC0 1.0). A friendly blob with expressive eyes and no mouth.
-import definition from "@dicebear/styles/gaze.json";
-import { colorField, dicebearStyle, variantField } from "../dicebear";
+import definition from "@dicebear/styles/gaze.json" with { type: "json" };
+import { colorField, dicebearStyle, variantField } from "../dicebear.js";
+import type { DicebearDefinition } from "../dicebear.js";
 
-const def = definition as any;
+const def: DicebearDefinition = definition;
 
 export const gaze = dicebearStyle({
   id: "gaze",
