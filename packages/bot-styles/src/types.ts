@@ -17,6 +17,7 @@ export interface Anchors {
   /** mouth y */ my: number;
   /** chin y */ chin: number;
   /** chest y (held props) */ chest?: number;
+  /** shoulder (the arm's root, inside the clothes) */ sx?: number; sy?: number;
 }
 
 /** Everything the engine needs from a style. Faces are HTML/SVG strings. */
@@ -46,6 +47,11 @@ export interface StyleArt {
   lift?: number;
   /** A head-and-shoulders picture: anchored below the frame so tilts never show the cut. */
   bust?: boolean;
+  /** How the app-drawn arm appears: "attached" (default for busts: rooted in the shoulder,
+   *  behind the body), "floating" (default otherwise: a small hand beside the head) or "none". */
+  arm?: "attached" | "floating" | "none";
+  /** The art's line, so app-drawn limbs match it (width in a 1000-unit art box). */
+  outline?: { color: string; width: number };
 }
 
 export interface Credit {

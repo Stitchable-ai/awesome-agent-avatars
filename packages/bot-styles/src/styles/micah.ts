@@ -40,7 +40,7 @@ export const micah = dicebearStyle({
     scared: { eyesVariant: "round", mouthVariant: "nervous", eyebrowsVariant: "up" },
   },
   art: {
-    bust: true, lift: 0.7, rot: { yaw: 0.75, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 8, y: 12 },
+    bust: true, lift: 0.7, outline: { color: "#000", width: 10 }, rot: { yaw: 0.75, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 8, y: 12 },
     parallax: { eyes: 10, eyebrows: 7, glasses: 7.5, nose: 5, mouth: 3.5, facialHair: 3, hair: 1.2, ears: -1.5, earrings: -1.5 },
   },
 });

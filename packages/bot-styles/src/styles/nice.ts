@@ -22,7 +22,7 @@ const chunks = (m: string) => m.match(/<svg[\s\S]*?<\/svg>/g) || [];
 const PROBE: [string, string, string[]][] = [
   ["eyes", "eyeStyle", ["oval", "circle"]], ["mouth", "mouthStyle", ["laugh", "smile"]], ["eyebrows", "eyeBrowStyle", ["up", "upWoman"]],
   ["nose", "noseStyle", ["long", "round", "short"]], ["glasses", "glassesStyle", ["square", "round"]], ["hair", "hairStyle", ["womanShort", "normal", "thick"]],
-  ["face", "faceColor", ["#AC6651", "#F9C9B6"]],
+  ["face", "faceColor", ["#AC6651", "#F9C9B6"]], ["clothes", "shirtStyle", ["short", "polo", "hoody"]],
 ];
 const partCache = new Map<string, Record<number, string>>();
 /** Which <svg> layer is which part, for this exact look (a missing layer, e.g. no glasses, shifts the rest). */
@@ -74,7 +74,7 @@ export const nice = defineStyle<Opts>({
     const faces: Record<string, string> = {};
     for (const [f, fo] of Object.entries(FACES)) faces[f] = tagged(render({ ...base, ...fo }));
     return {
-      id: "nice", tier: "parts", faces: faces as StyleArt["faces"], bust: true, lift: 0.7, partUnits: "px", faceSelector: ".bs-part-face",
+      id: "nice", tier: "parts", faces: faces as StyleArt["faces"], bust: true, lift: 0.7, partUnits: "px", faceSelector: ".bs-part-face", outline: { color: "#000", width: 7 },
       skin: o.faceColor, sleeve: o.shirtColor, rot: { yaw: 0.75, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 8, y: 12 },
       parallax: { eyes: 4, eyebrows: 3.2, glasses: 3.6, nose: 2.6, mouth: 2, hair: 0.6 },
     };

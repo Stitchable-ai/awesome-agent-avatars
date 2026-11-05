@@ -23,7 +23,9 @@ interface AvatarStyle<O> {
 | `anchors` | where worn props sit (headphones, hat, cape, crystal, blush, hand), as fractions of the art box. Leave it out for tagged styles: the engine measures eyes, mouth, hair and head. |
 | `bust` | a head-and-shoulders picture: anchored below the frame so a tilt or hop never shows the cut edge. |
 | `rot`, `tilt`, `lift` | how far flat art may turn (a flat card reads badly past ~15°), how much the head tilts toward the pointer, how high it hops. |
-| `skin`, `sleeve` | colours for the app-drawn waving hand. |
+| `skin`, `sleeve` | colours for the app-drawn arm and hand. |
+| `arm` | `"attached"` (default for busts): the arm roots inside the shoulder, behind the art, so the body hides the joint; the hand is drawn in front. `"floating"` (default otherwise): a small hand beside the head, for abstract characters. `"none"`. The shoulder is measured from a tagged `bs-part-clothes`, or set `anchors.sx`/`anchors.sy`. |
+| `outline` | `{ color, width }` so app-drawn limbs match the art's line (width in a 1000-unit art box; omit for unlined art). |
 
 ## Three ways to add a style
 

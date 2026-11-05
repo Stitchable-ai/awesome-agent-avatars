@@ -12,6 +12,7 @@ const CHARACTERS: [string, string][] = [
   ["Scientist", "scientist"], ["Teacher", "teacher"], ["Woman with headscarf", "woman_with_headscarf"], ["Person wearing turban", "person_wearing_turban"],
 ];
 const TONES = ["Default", "Light", "Medium-Light", "Medium", "Medium-Dark", "Dark"];
+const SKIN: Record<string, string> = { Default: "#ffc83d", Light: "#f7dece", "Medium-Light": "#f3d2a2", Medium: "#d5ab88", "Medium-Dark": "#af7e57", Dark: "#7c533e" };
 
 /** Build the image URL for a character and skin tone. */
 export const fluentUrl = (character: string, tone = "Default", baseUrl = FLUENT_CDN) => {
@@ -23,7 +24,7 @@ export function fluentStyle(o: { baseUrl?: string } = {}): AvatarStyle<{ charact
   const base = pictureStyle({
     id: "fluent", name: "Fluent Emoji 3D", src: fluentUrl("Woman office worker", "Default", o.baseUrl),
     credit: { author: "Microsoft", authorUrl: "https://github.com/microsoft", source: "Fluent Emoji", sourceUrl: "https://github.com/microsoft/fluentui-emoji", license: "MIT", licenseUrl: "https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE" },
-    skin: "#f3c7a6", sleeve: "#4a4560",
+    skin: "#ffc83d", sleeve: "#5b4f8a",
   });
   return {
     ...base,
@@ -32,7 +33,7 @@ export function fluentStyle(o: { baseUrl?: string } = {}): AvatarStyle<{ charact
       { key: "tone", label: "Skin tone", type: "select", options: TONES.map((t) => ({ value: t, label: t.replace("-", " ") })) },
     ],
     defaults: () => ({ character: "Woman office worker", tone: "Default", src: "" }),
-    render: (opts) => base.render({ src: fluentUrl(opts.character, opts.tone, o.baseUrl) }),
+    render: async (opts) => ({ ...(await base.render({ src: fluentUrl(opts.character, opts.tone, o.baseUrl) })), skin: SKIN[opts.tone] ?? SKIN.Default }),
   };
 }
 export const fluent = fluentStyle();

@@ -15,6 +15,7 @@ if (hash.startsWith("matrix")) sheet(hash.split("=")[1] || "Lifecycle");
 else if (hash === "faces") faces();
 else if (hash === "worn") worn();
 else if (hash === "react") reactSheet();
+else if (hash === "arms") arms();
 else main();
 
 function main() {
@@ -130,6 +131,17 @@ function worn() {
   const cols: [string, string][] = [["headphones", "working"], ["hat", "celebrate"], ["cape", "milestone"], ["crystal", "making"], ["hand", "waving"], ["blush", "shy"], ["sweat", "scared"], ["steam", "angry"], ["orbit", "orbit"], ["ball", "bouncing"], ["back", "turntable"]];
   const mx = grid("Worn props, placed from each style's measured face", cols.map(([n]) => n));
   STYLES.forEach((st, i) => { mx.insertAdjacentHTML("beforeend", `<div style="font-weight:700;font-size:12px">${st.name}</div>`); for (const [n, s] of cols) tile(mx, arts[i], s, n === "back" ? 5 : PEAK[s] ?? 1.3, "w" + i); });
+}
+function arms() {
+  // big tiles to review hands: waving (two moments of the wave) and the raised "needs you" hand
+  const cols: [string, string, number][] = [["waving, start", "waving", 0.45], ["waving, later", "waving", 1.05], ["needs you", "blocked", 1.2], ["needs you, later", "blocked", 2.0]];
+  app.innerHTML = `<h1 style="font-size:20px;margin:0 0 10px">Hands on every style</h1><div id="mx" style="display:grid;gap:8px;align-items:center;grid-template-columns:110px repeat(${cols.length},240px)"></div>`;
+  const mx = document.getElementById("mx")!;
+  mx.insertAdjacentHTML("beforeend", "<div></div>" + cols.map(([c]) => `<div style="font-size:11px;font-weight:700;color:#6b6878;text-align:center">${c}</div>`).join(""));
+  STYLES.forEach((st, i) => {
+    mx.insertAdjacentHTML("beforeend", `<div style="font-weight:700;font-size:12px">${st.name}</div>`);
+    for (const [, s, t] of cols) { const el = document.createElement("div"); el.style.width = "240px"; mx.append(el); createAvatar(el, arts[i], { static: true, state: s, seed: "a" + i, motion }).simulate(t); }
+  });
 }
 function reactSheet() {
   const names = Object.keys(REACTIONS);

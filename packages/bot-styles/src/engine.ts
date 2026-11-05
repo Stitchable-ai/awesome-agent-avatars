@@ -7,6 +7,7 @@ import { defaultMotion } from "./motion";
 import { PROPS } from "./props";
 import { stylesheet } from "./css";
 import { attachInteractions } from "./interactions";
+import { armMode } from "./arm";
 import type { AvatarOptions, BotAvatar, Clip, FaceName, LookDirection, MotionPack, PokeName, Pose, StyleArt } from "./types";
 
 const PI2 = Math.PI * 2, D2R = Math.PI / 180;
@@ -147,7 +148,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     blinkT: 0, nextBlink: 1 + r() * 3, eye: { x: 0, y: 0 }, talkOpen: false, talkT: 0,
     ptr: { x: 0, y: 0, hold: 0, want: 0 }, pokes: [] as PokeState[],
     drag: { on: false, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, sw: 0, sv: 0, gx: 0, gy: 0, prev: null as string | null },
-    unit: 1, compact: false, anchored: false, backside: false, lastAttention: 0, wakeTo: null as string | null,
+    unit: 1, compact: false, anchored: false, backside: false, artStyle: art, anchors: undefined as any, lastAttention: 0, wakeTo: null as string | null,
     autoBored: opts.autoSleep === false ? 0 : opts.autoSleep?.bored ?? 45, noBlink: !!opts.static, reduced: false,
   };
   (root as any).__bsAvatar = a; observer()?.observe(root);
@@ -155,7 +156,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
   const ro = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null; ro?.observe(root); measure();
 
   function applyArt(next: StyleArt) {
-    style = next; a.faces = {}; a.anchored = false; a.face = null;
+    style = next; a.artStyle = next; a.anchors = undefined; a.faces = {}; a.anchored = false; a.face = null;
     root.dataset.tier = style.tier; root.classList.toggle("bust", !!style.bust);
     body.style.setProperty("--skin", style.skin || "#f2c6a0"); body.style.setProperty("--sleeve", style.sleeve || style.skin || "#6b7280");
     // worn props and mini copies depend on the art
@@ -192,16 +193,21 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
         for (const e of drawn) { const q = e.getBoundingClientRect(); if (!q.width && !q.height) continue; l = Math.min(l, q.left); t = Math.min(t, q.top); rr = Math.max(rr, q.right); b = Math.max(b, q.bottom); }
         return l > rr ? null : { l: (l - box.left) / box.width, t: (t - box.top) / box.height, r: (rr - box.left) / box.width, b: (b - box.top) / box.height };
       };
-      const E = R(".bs-part-eyes"), M = R(".bs-part-mouth"), F = R(style.faceSelector || ".bs-part-head, .bs-part-face, .bs-part-shape"), H = R(".bs-part-hair, .bs-part-top");
+      const E = R(".bs-part-eyes"), M = R(".bs-part-mouth"), F = R(style.faceSelector || ".bs-part-head, .bs-part-face, .bs-part-shape"), H = R(".bs-part-hair, .bs-part-top"), Cl = R(".bs-part-clothes");
       const ey = E ? (E.t + E.b) / 2 : F ? F.t + (F.b - F.t) * 0.42 : 0.4;
       const hw = F ? F.r - F.l : E ? (E.r - E.l) * 2.1 : 0.5;
       const my = M ? (M.t + M.b) / 2 : ey + hw * 0.3;
-      A = { cx: E ? (E.l + E.r) / 2 : F ? (F.l + F.r) / 2 : 0.5, ey, hw, crown: Math.min(H ? H.t : 1, F ? F.t : 1, ey - hw * 0.45), my, chin: M ? M.b + (M.b - ey) * 0.3 : F ? F.b : ey + hw * 0.55 };
+      const cx = E ? (E.l + E.r) / 2 : F ? (F.l + F.r) / 2 : 0.5;
+      A = { cx, ey, hw, crown: Math.min(H ? H.t : 1, F ? F.t : 1, ey - hw * 0.45), my, chin: M ? M.b + (M.b - ey) * 0.3 : F ? F.b : ey + hw * 0.55 };
+      // the shoulder: a point inside the clothes, part-way out toward the edge, where an arm can root
+      if (Cl) { A.sx = Math.min(0.97, cx + (Cl.r - cx) * 0.62); A.sy = Cl.t + (Cl.b - Cl.t) * 0.3; }
     }
     A = { ...A, ...(style.anchorAdjust || {}) };
     A.chest = A.chest ?? Math.min(0.88, A.chin + 0.2);
     for (const [k, v] of Object.entries(A)) body.style.setProperty("--" + k, (v as number).toFixed(4));
-    a.anchors = A; a.anchored = true; return true;
+    a.anchors = A; a.anchored = true;
+    for (const [id, el] of a.propEls) if (PROPS[id]?.anchored && typeof PROPS[id].html === "function") (el as HTMLElement).innerHTML = (PROPS[id].html as any)(a);
+    return true;
   }
 
   // ---- props ----
@@ -209,19 +215,19 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     const rec = STATES[a.state], want = new Set<string>(([] as string[]).concat(rec.prop || [], rec.wear || []));
     for (const [id, until] of Object.entries(a.flashes)) if (a.T < (until as number)) want.add(id);
     if (want.has("cape")) want.add("bow");
+    if (want.has("hand") && armMode(style) === "attached") want.add("arm");
     return want;
   }
   function syncProps() {
     const want = propIds();
     for (const [id, el] of a.propEls) if (!want.has(id)) { a.propEls.delete(id); el.classList.add("out"); setTimeout(() => el.remove(), 280); }
-    const hand = a.propEls.get("hand");
-    if (hand) { const w = !!STATES[a.state].wave; hand.classList.toggle("wave", w); hand.classList.toggle("raise", !w); }
+    for (const id of ["hand", "arm"]) { const el = a.propEls.get(id); if (el) { const w = !!STATES[a.state].wave; el.classList.toggle("wave", w); el.classList.toggle("raise", !w); } }
     for (const id of want) {
       const P = PROPS[id]; if (a.propEls.has(id) || !P) continue;
       const el = document.createElement("div");
       el.className = "bs-prop in" + (P.badge ? " badge" : ""); el.dataset.p = id;
       el.innerHTML = typeof P.html === "function" ? P.html(a) : P.html;
-      if (id === "hand") el.classList.add(STATES[a.state].wave ? "wave" : "raise");
+      if (id === "hand" || id === "arm") el.classList.add(STATES[a.state].wave ? "wave" : "raise");
       (P.layer === "front" ? front : P.layer === "back" ? back : fx).append(el);
       a.propEls.set(id, el);
     }

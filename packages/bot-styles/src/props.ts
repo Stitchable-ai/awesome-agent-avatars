@@ -1,6 +1,9 @@
 // App-drawn props: the same for every style. fx = around the avatar; front/back = worn, moving with the head.
 // Register more with registerProp(). Classes are prefixed bs- (see css.ts).
-export interface PropDef { layer?: "fx" | "front" | "back"; badge?: 1 | boolean; html: string | ((avatar: { miniArt(): string }) => string) }
+import { armHTML } from "./arm";
+import type { Anchors, StyleArt } from "./types";
+/** `anchored` props depend on the style's anchors and are redrawn when the art changes. */
+export interface PropDef { layer?: "fx" | "front" | "back"; badge?: 1 | boolean; anchored?: boolean; html: string | ((avatar: { miniArt(): string; artStyle: StyleArt; anchors?: Anchors }) => string) }
 const mini = '<i class="bs-mini"><b class="bs-mini-art">{ART}</b></i>';
 export const PROPS: Record<string, PropDef> = {
   dots: { badge: 1, html: '<div class="bs-p-bubble bs-p-think"><i></i><i></i><i></i></div>' },
@@ -49,7 +52,8 @@ export const PROPS: Record<string, PropDef> = {
   bow: { layer: "front", html: '<div class="bs-w bs-w-bow" data-k="0"><svg viewBox="0 0 30 14"><path d="M15 7L2 1v12zM15 7l13-6v12z" fill="#6d28d9"/><circle cx="15" cy="7" r="3" fill="#5b21b6"/></svg></div>' },
   crystal: { layer: "front", html: '<div class="bs-w bs-w-crystal" data-k="0"><i class="glow"></i><svg viewBox="0 0 40 48"><path d="M20 1l17 15-17 31L3 16z" fill="#a78bfa"/><path d="M20 1l17 15H3z" fill="#c4b5fd"/><path d="M20 1v46M3 16l17 6 17-6" stroke="#ede9fe" stroke-width="1" fill="none" opacity=".8"/></svg><b></b><b></b><b></b></div>' },
   blush: { layer: "front", html: '<div class="bs-w bs-w-blush" data-k="3.5"><i></i><i></i></div>' },
-  hand: { layer: "front", html: '<div class="bs-w bs-w-hand" data-k="0"><svg viewBox="0 0 40 100"><rect x="9" y="40" width="22" height="64" rx="10" style="fill:var(--sleeve)"/><path d="M8 44V22a4 4 0 0 1 8 0V8a4 4 0 0 1 8 0v4a4 4 0 0 1 8 0v8a4 4 0 0 1 7 2v18a12 12 0 0 1-12 12h-6A13 13 0 0 1 8 44z" style="fill:var(--skin)" stroke="rgba(0,0,0,.12)"/></svg></div>' },
+  hand: { layer: "front", anchored: true, html: (a) => armHTML(a.artStyle, a.anchors, "front") },
+  arm: { layer: "back", anchored: true, html: (a) => armHTML(a.artStyle, a.anchors, "back") },
 };
 
 

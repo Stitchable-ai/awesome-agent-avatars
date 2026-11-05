@@ -46,6 +46,8 @@ await p.keyboard.press("Enter"); await p.waitForTimeout(200); s = await st(3); o
 const seen = new Set(); for (let k = 0; k < 44; k++) { seen.add((await st(3)).state); await p.waitForTimeout(500); }
 ok("a full turn passes every step", ["thinking", "searching", "reading", "coding", "running", "streaming", "finished", "idle"].every((x) => seen.has(x)), [...seen]);
 await p.click("#need"); await p.waitForTimeout(2500); s = await st(0); ok("needs approval: hand + ? bubble", s.state === "blocked" && s.props.includes("hand") && s.props.includes("ask"), s);
+const arms = await p.evaluate(() => BS_PAGE.avs.map((a) => ({ hand: !!a.root.querySelector('[data-p="hand"] svg'), arm: !!a.root.querySelector('.bs-back [data-p="arm"] .bs-arm'), floating: !!a.root.querySelector(".bs-w-hand") })));
+ok("half-body styles raise an attached arm; Gaze keeps a floating hand", [0, 1, 2, 4].every((i) => arms[i].hand && arms[i].arm && !arms[i].floating) && arms[3].floating && !arms[3].arm, arms);
 await p.click("#approve"); await p.waitForTimeout(300); s = await st(0); ok("approve: approving", s.state === "approving", s);
 await p.evaluate(() => BS_PAGE.avs[0].setState("thinking"));
 const swapped = await p.evaluate(async () => { const before = BS_PAGE.avs[0].root.querySelector(".bs-art").innerHTML.length; document.querySelector("#swap button").click(); await new Promise((r) => setTimeout(r, 200)); const a = BS_PAGE.avs[0]; return { state: a.state, changed: a.root.querySelector(".bs-art").innerHTML.length !== before }; });

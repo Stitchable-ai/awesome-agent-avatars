@@ -28,7 +28,7 @@ export function pictureStyle(cfg: {
       for (const [k, v] of Object.entries(cfg.faces || {})) if (v) (faces as any)[k] = img(v);
       return {
         id: cfg.id, tier: "picture", faces, bust: cfg.bust ?? true, skin: cfg.skin, sleeve: cfg.sleeve,
-        anchors: cfg.anchors ?? { cx: 0.5, ey: 0.36, hw: 0.5, crown: 0.06, my: 0.5, chin: 0.6, chest: 0.8 },
+        anchors: cfg.anchors ?? { cx: 0.5, ey: 0.36, hw: 0.5, crown: 0.06, my: 0.5, chin: 0.6, chest: 0.8, sx: 0.78, sy: 0.84 },
         rot: { yaw: 0.8, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 10, y: 16 }, lift: 0.7,
       };
     },
