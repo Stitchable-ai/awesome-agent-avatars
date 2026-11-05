@@ -1,0 +1,45 @@
+{
+  "name": "bot-styles-workspace",
+  "private": true,
+  "type": "module",
+  "description": "Bring your AI agent to life: one motion engine, 58 agent states, hot-swappable open-source avatar styles.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build --workspace bot-styles",
+    "typecheck": "tsc -p packages/bot-styles/tsconfig.json --noEmit && tsc -p tsconfig.examples.json --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "size": "node scripts/size.mjs",
+    "dev": "vite --config site/vite.config.ts",
+    "build:site": "vite build --config site/vite.config.ts",
+    "preview:site": "vite preview --config site/vite.config.ts",
+    "dev:editor": "vite --config examples/react-editor/vite.config.ts",
+    "dev:vanilla": "vite --config examples/vanilla/vite.config.ts",
+    "media": "node scripts/record-media.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Stitchable-ai/open-stitch-bot-styles.git"
+  },
+  "homepage": "https://bot-styles.stitchable.ai",
+  "devDependencies": {
+    "@dicebear/core": "10.7.0",
+    "@dicebear/styles": "10.6.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "esbuild": "0.28.2",
+    "playwright": "1.64.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-nice-avatar": "1.5.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.6"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["vite/client"],
+    "paths": {
+      "bot-styles": ["./packages/bot-styles/src/index.ts"],
+      "bot-styles/react": ["./packages/bot-styles/src/react.tsx"],
+      "bot-styles/dicebear": ["./packages/bot-styles/src/dicebear.ts"],
+      "bot-styles/styles/*": ["./packages/bot-styles/src/styles/*.ts"],
+      "@examples/*": ["./examples/*"]
+    }
+  },
+  "include": ["site/src", "examples/vanilla", "examples/react-editor/src", "examples/nextjs/app"],
+  "exclude": ["**/vite.config.ts", "**/node_modules", "**/dist"]
+}

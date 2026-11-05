@@ -1,0 +1,8 @@
+node_modules/
+dist/
+site/dist/
+*.log
+.DS_Store
+/tmp/
+packages/bot-styles/LICENSE
+packages/bot-styles/THIRD_PARTY_NOTICES.md

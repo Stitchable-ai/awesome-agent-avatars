@@ -1,0 +1,98 @@
+{
+  "name": "bot-styles",
+  "version": "0.1.0",
+  "description": "Bring your AI agent to life: one motion engine, 58 agent states, hot-swappable open-source avatar styles.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/types/react.d.ts",
+      "import": "./dist/react.js"
+    },
+    "./dicebear": {
+      "types": "./dist/types/dicebear.d.ts",
+      "import": "./dist/dicebear.js"
+    },
+    "./styles/micah": {
+      "types": "./dist/types/styles/micah.d.ts",
+      "import": "./dist/styles/micah.js"
+    },
+    "./styles/avataaars": {
+      "types": "./dist/types/styles/avataaars.d.ts",
+      "import": "./dist/styles/avataaars.js"
+    },
+    "./styles/gaze": {
+      "types": "./dist/types/styles/gaze.d.ts",
+      "import": "./dist/styles/gaze.js"
+    },
+    "./styles/nice": {
+      "types": "./dist/types/styles/nice.d.ts",
+      "import": "./dist/styles/nice.js"
+    },
+    "./styles/fluent": {
+      "types": "./dist/types/styles/fluent.d.ts",
+      "import": "./dist/styles/fluent.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "prepack": "node -e \"for (const f of ['LICENSE','THIRD_PARTY_NOTICES.md']) require('fs').copyFileSync('../../'+f, f)\""
+  },
+  "peerDependencies": {
+    "@dicebear/core": ">=10.7.0",
+    "@dicebear/styles": ">=10.6.0",
+    "react": ">=18",
+    "react-dom": ">=18",
+    "react-nice-avatar": ">=1.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@dicebear/core": {
+      "optional": true
+    },
+    "@dicebear/styles": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "react-nice-avatar": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "ai-agent",
+    "avatar",
+    "animation",
+    "mascot",
+    "dicebear",
+    "react",
+    "tauri",
+    "electron",
+    "nextjs",
+    "agent-ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Stitchable-ai/open-stitch-bot-styles.git",
+    "directory": "packages/bot-styles"
+  },
+  "homepage": "https://bot-styles.stitchable.ai"
+}
