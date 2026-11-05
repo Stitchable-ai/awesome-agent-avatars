@@ -23,6 +23,6 @@ export const gaze = dicebearStyle({
     focused: { eyesVariant: "small" }, surprised: { eyesVariant: "big" }, sad: { eyesVariant: "tall" }, sleepy: { eyesVariant: "dots" },
     squinted: { eyesVariant: "bars" }, angry: { eyesVariant: "bars" }, scared: { eyesVariant: "wide" }, love: { eyesVariant: "shine" },
   },
-  art: { rot: { yaw: 1.1, pitch: 1 }, tilt: { x: 14, y: 20 }, parallax: { eyes: 3.6 } },
+  art: { body: "head", rot: { yaw: 1.1, pitch: 1 }, tilt: { x: 14, y: 20 }, parallax: { eyes: 3.6 } },
 });
 export default gaze;

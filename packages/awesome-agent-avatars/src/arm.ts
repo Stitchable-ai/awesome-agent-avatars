@@ -1,14 +1,14 @@
-// The app-drawn arm and hand (waving, raised to ask). Three ways, chosen per style:
+// The app-drawn arm and hand (waving, raised to ask), chosen by what the art shows:
 //
-//  forearm  – 2D half-body art (default for busts). A head-and-shoulders crop shows no
-//             elbow, so only a forearm rises from below the frame, in front of the
-//             shoulder, in the style's sleeve colour and line, with the hand at chin height.
-//             It waves about the elbow, which stays out of view, and only swings outward so
-//             the hand never covers the face.
-//  floating – a hand beside the head, the way emoji hold theirs: a drawn hand for abstract
-//             characters, or the style's own hand images (`hands`) for picture styles.
-//  none     – no hand. Half-body pictures that already have arms at their sides get this:
-//             adding a raised arm to them always reads as a third arm.
+//  body "bust" (head and shoulders) → forearm. The crop shows no elbow, so only a forearm rises
+//             from below the frame, in front of the shoulder, in the style's sleeve colour and line,
+//             with the hand at chin height. It waves about the hidden elbow and only swings outward,
+//             so the hand never covers the face.
+//  body "head" (a head, face or blob with no neck or body) → hand. Just a hand beside the face, the
+//             way emoji hold theirs: drawn in the style's own colour, or the style's hand images
+//             (`hands`, e.g. Fluent's 3D 👋 and ✋). Never an arm: there is no body to attach it to.
+//  none     – half-body pictures that already have arms at their sides: a raised arm added to
+//             them always reads as a third arm.
 import type { Anchors, StyleArt } from "./types";
 
 type Pt = { x: number; y: number };
@@ -20,12 +20,15 @@ const darken = (hex: string, k: number) => {
 const f1 = (n: number) => n.toFixed(1);
 const esc = (s: string) => s.replace(/[&"<>]/g, (c) => ({ "&": "&amp;", '"': "&quot;", "<": "&lt;", ">": "&gt;" })[c]!);
 
-export type ArmMode = "forearm" | "floating" | "none";
+export type ArmMode = "forearm" | "hand" | "none";
+export const bodyOf = (art: StyleArt) => art.body ?? (art.bust ? "bust" : "head");
 export function armMode(art: StyleArt): ArmMode {
   if (art.arm === "attached") return "forearm";
+  if (art.arm === "floating") return "hand";
   if (art.arm) return art.arm;
-  if (art.tier === "picture") return art.hands ? "floating" : "none";
-  return art.bust ? "forearm" : "floating";
+  const body = bodyOf(art);
+  if (art.tier === "picture") return body === "head" && art.hands ? "hand" : "none";
+  return body === "bust" ? "forearm" : "hand";
 }
 
 /** Forearm geometry in a 1000-unit box matching the art box: from the elbow (below the frame,
@@ -46,11 +49,11 @@ const HAND = [
   '<rect x="-6.5" y="-34" width="13" height="34" rx="6.5" transform="translate(-19 -20) rotate(-40)"/>',
 ].join("");
 
-/** HTML for the front layer (forearm and hand, or a floating hand). */
+/** HTML for the front layer: a forearm and hand (busts) or a hand alone (heads). */
 export function armHTML(art: StyleArt, anchors: Anchors | undefined, layer: "front" | "back"): string {
   const mode = armMode(art);
   if (mode === "none") return "";
-  if (mode === "floating") return layer === "front" ? (art.hands ? handImages(art.hands) : FLOATING) : "";
+  if (mode === "hand") return layer === "front" ? (art.hands ? handImages(art.hands) : drawnHand(art)) : "";
   if (layer === "back" || !anchors) return "";
   const g = forearmGeometry(anchors), skin = art.skin || "#f2c6a0", sleeve = art.sleeve || "#6b7280";
   const ow = art.outline?.width ?? 0, oc = art.outline?.color ?? "#000";
@@ -77,5 +80,11 @@ function handImages(h: { wave?: string; raise?: string }): string {
   return `<div class="aav-w aav-w-hand aav-w-hand3d" data-k="0">${img(h.wave || h.raise, "aav-hand-wave")}${img(h.raise || h.wave, "aav-hand-raise")}</div>`;
 }
 
-// For abstract styles with no body: a small hand beside the head.
-const FLOATING = '<div class="aav-w aav-w-hand" data-k="0"><svg viewBox="0 0 40 100"><rect x="9" y="40" width="22" height="64" rx="10" style="fill:var(--sleeve)"/><path d="M8 44V22a4 4 0 0 1 8 0V8a4 4 0 0 1 8 0v4a4 4 0 0 1 8 0v8a4 4 0 0 1 7 2v18a12 12 0 0 1-12 12h-6A13 13 0 0 1 8 44z" style="fill:var(--skin)" stroke="rgba(0,0,0,.12)"/></svg></div>';
+// A hand alone, in the style's own colour, for heads with no body. Wrist at the bottom centre,
+// tilted a little away from the face; it waves about the wrist.
+function drawnHand(art: StyleArt): string {
+  const skin = art.skin || "#f2c6a0", oc = art.outline?.color ?? darken(skin, 0.3), ow = art.outline ? 5 : 3;
+  return `<div class="aav-w aav-w-hand aav-w-handonly" data-k="0"><svg viewBox="-62 -112 124 124" aria-hidden="true"><g transform="rotate(12)">`
+    + `<g fill="${oc}" stroke="${oc}" stroke-width="${ow * 2}" stroke-linejoin="round">${HAND}</g><g fill="${skin}">${HAND}</g>`
+    + `<g stroke="${darken(skin, 0.22)}" stroke-width="2.4" stroke-linecap="round" opacity=".6"><path d="M-12 -40v-14M1 -40v-14M14 -40v-12"/></g></g></svg></div>`;
+}

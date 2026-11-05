@@ -7,7 +7,7 @@
 One open-source motion engine for agent avatars: **58 agent states**, reactions and interactions, on **hot-swappable avatar styles**.<br>
 React · Next.js · Remix · Tauri · Electron · plain DOM. Core is ~24 KB gzipped with zero dependencies.
 
-[**Live playground**](https://bot-styles.stitchable.ai/playground.html) · [Editor demo](https://bot-styles.stitchable.ai/editor.html) · [Docs](docs/) · [Add it to your agent](#for-coding-agents)
+[**Live playground**](https://awesome-agent-avatars.stitchable.ai/playground.html) · [Editor demo](https://awesome-agent-avatars.stitchable.ai/editor.html) · [Docs](docs/) · [Add it to your agent](#for-coding-agents)
 
 <img src="media/hero.gif" width="560" alt="Five avatar styles running one engine: they follow the pointer, then play a full agent turn (sending, thinking, searching, coding, streaming, finished)">
 
@@ -151,7 +151,7 @@ Every style exposes the same editing interface: `fields` (select, colour, toggle
 { "v": 1, "style": "micah", "options": { "baseColor": "#ac6651", "hairVariant": "fonze", "glassesVariant": "round" }, "name": "Stitch" }
 ```
 
-[examples/react-editor](examples/react-editor) is a complete editor built only from that interface ([try it](https://bot-styles.stitchable.ai/editor.html)).
+[examples/react-editor](examples/react-editor) is a complete editor built only from that interface ([try it](https://awesome-agent-avatars.stitchable.ai/editor.html)).
 
 ## Awesome avatar art
 

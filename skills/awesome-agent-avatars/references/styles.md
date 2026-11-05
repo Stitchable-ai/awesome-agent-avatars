@@ -24,8 +24,9 @@ interface AvatarStyle<O> {
 | `bust` | a head-and-shoulders picture: anchored below the frame so a tilt or hop never shows the cut edge. |
 | `rot`, `tilt`, `lift` | how far flat art may turn (a flat card reads badly past ~15°), how much the head tilts toward the pointer, how high it hops. |
 | `skin`, `sleeve` | colours for the app-drawn arm and hand. |
-| `arm` | how the arm appears when waving or asking. `"forearm"` (default for 2D busts): a forearm rises from below the frame in front of the shoulder, elbow out of view, hand at chin height, in your sleeve colour and line (kept over the measured `aav-part-clothes`). `"floating"` (default otherwise): a hand beside the head, the way emoji hold theirs. `"none"`. Do not give a half-body **picture** that already has arms at its sides a raised arm: it always reads as a third arm. Use a head-only picture with `hands` instead. |
-| `hands` | for picture styles: `{ wave, raise }` hand images in the same art style (Fluent uses its own 3D 👋 and ✋), shown beside the head. Without them a picture style shows no hand. |
+| `body` | what the art shows below the face, which decides how it waves. `"bust"` (head and shoulders; the default when `bust` is set): a forearm rises from below the frame in front of the shoulder, elbow out of view, hand at chin height, in your sleeve colour and line. `"head"` (a head, face or blob with no neck or body, like Gaze or Fluent's heads; the default otherwise): a hand only, beside the face the way emoji hold theirs, never an arm. |
+| `hands` | for picture styles with `body: "head"`: `{ wave, raise }` hand images in the same art style (Fluent uses its own 3D 👋 and ✋). Drawn styles get a hand in their own colour. A half-body picture that already shows arms gets no hand: a raised arm added to it always reads as a third arm. |
+| `arm` | override: `"forearm"`, `"hand"` or `"none"`. |
 | `outline` | `{ color, width }` so app-drawn limbs match the art's line (width in a 1000-unit art box; omit for unlined art). |
 
 ## Three ways to add a style

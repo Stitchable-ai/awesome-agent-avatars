@@ -27,7 +27,7 @@
     "type": "git",
     "url": "https://github.com/Stitchable-ai/awesome-agent-avatars.git"
   },
-  "homepage": "https://bot-styles.stitchable.ai",
+  "homepage": "https://awesome-agent-avatars.stitchable.ai",
   "devDependencies": {
     "@dicebear/core": "10.7.0",
     "@dicebear/styles": "10.6.0",

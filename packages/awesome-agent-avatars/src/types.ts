@@ -47,12 +47,14 @@ export interface StyleArt {
   lift?: number;
   /** A head-and-shoulders picture: anchored below the frame so tilts never show the cut. */
   bust?: boolean;
-  /** How the arm appears when waving or asking:
-   *  "forearm"  (default for 2D busts): a forearm rises from below the frame, elbow out of view;
-   *  "floating" (default otherwise): a hand beside the head, the way emoji hold theirs. Picture styles
-   *             can supply hand images (`hands`); a picture style without them shows no hand;
-   *  "none". Never use a drawn arm on a half-body picture that already has arms at its sides. */
-  arm?: "forearm" | "floating" | "none" | "attached";
+  /** What the art shows below the face, which decides how it waves:
+   *  "bust" (head and shoulders; default when `bust` is set): a forearm rises from below the frame;
+   *  "head" (a head, face or blob with no neck or body; the default otherwise): a hand only,
+   *  floating beside the face the way emoji hold theirs. Never an arm. */
+  body?: "bust" | "head";
+  /** Override how the arm appears: "forearm", "hand" or "none". Half-body pictures that already
+   *  have arms at their sides get "none": adding a raised arm reads as a third arm. */
+  arm?: "forearm" | "hand" | "none" | "floating" | "attached";
   /** Hand images for picture styles (same art style as the picture): waving and raised to ask. */
   hands?: { wave?: string; raise?: string };
   /** The art's line, so app-drawn limbs match it (width in a 1000-unit art box). */

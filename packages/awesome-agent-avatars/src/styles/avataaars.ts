@@ -42,7 +42,7 @@ export const avataaars = dicebearStyle({
     love: { eyesVariant: "hearts", mouthVariant: "smile", eyebrowsVariant: "raisedExcitedNatural" },
   },
   art: {
-    bust: true, lift: 0.7, closedFaces: ["sleepy"], rot: { yaw: 0.75, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 8, y: 12 },
+    bust: true, body: "bust", lift: 0.7, closedFaces: ["sleepy"], rot: { yaw: 0.75, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 8, y: 12 },
     parallax: { eyes: 7, eyebrows: 5.5, nose: 4, mouth: 3, facialHair: 2.5, top: 1, accessories: 4.5 },
   },
 });

@@ -16,6 +16,6 @@ export function Bot({ state }: { state: string }) {
 }
 ```
 
-Docs, demos, credits and the agent skill: **https://github.com/Stitchable-ai/awesome-agent-avatars** · Playground: **https://bot-styles.stitchable.ai**
+Docs, demos, credits and the agent skill: **https://github.com/Stitchable-ai/awesome-agent-avatars** · Playground: **https://awesome-agent-avatars.stitchable.ai**
 
 The engine is MIT. Each art style keeps its own licence (Micah is CC BY 4.0 and requires attribution); see THIRD_PARTY_NOTICES.md.

@@ -38,7 +38,7 @@ export function fluentStyle(o: { baseUrl?: string } = {}): AvatarStyle<{ charact
     render: async (opts) => {
       const tone = TONES.includes(opts.tone) ? opts.tone : "Default";
       const art = await base.render({ src: fluentUrl(opts.character, tone, baseUrl) });
-      return { ...art, rot: { yaw: 0.9, pitch: 0.9, roll: 0.8, x: 0.8 }, tilt: { x: 12, y: 18 }, lift: 1,
+      return { ...art, body: "head" as const, rot: { yaw: 0.9, pitch: 0.9, roll: 0.8, x: 0.8 }, tilt: { x: 12, y: 18 }, lift: 1,
         hands: { wave: asset("Waving hand", tone, baseUrl), raise: asset("Raised hand", tone, baseUrl) } };
     },
   };
