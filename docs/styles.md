@@ -24,8 +24,8 @@ interface AvatarStyle<O> {
 | `bust` | a head-and-shoulders picture: anchored below the frame so a tilt or hop never shows the cut edge. |
 | `rot`, `tilt`, `lift` | how far flat art may turn (a flat card reads badly past ~15°), how much the head tilts toward the pointer, how high it hops. |
 | `skin`, `sleeve` | colours for the app-drawn arm and hand. |
-| `arm` | how the arm appears when waving or asking. `"forearm"` (default for 2D busts): a forearm rises from below the frame in front of the shoulder, elbow out of view, in your sleeve colour and line (it is kept over the measured `aav-part-clothes`). `"sprite"` (default when `armSprite` is set): a real raised arm cut from a matching picture, for 3D/picture styles. `"floating"` (default for other parts styles): a small hand beside the head, for abstract characters. `"none"` (default for pictures without a sprite). |
-| `armSprite` | for picture styles: an image of the same character with a raised arm, plus clip polygons for the hand and sleeve, where it sits on the art box, the elbow pivot, and a `tint` that recolours the borrowed sleeve to the outfit. See `styles/fluent.ts`. |
+| `arm` | how the arm appears when waving or asking. `"forearm"` (default for 2D busts): a forearm rises from below the frame in front of the shoulder, elbow out of view, hand at chin height, in your sleeve colour and line (kept over the measured `aav-part-clothes`). `"floating"` (default otherwise): a hand beside the head, the way emoji hold theirs. `"none"`. Do not give a half-body **picture** that already has arms at its sides a raised arm: it always reads as a third arm. Use a head-only picture with `hands` instead. |
+| `hands` | for picture styles: `{ wave, raise }` hand images in the same art style (Fluent uses its own 3D 👋 and ✋), shown beside the head. Without them a picture style shows no hand. |
 | `outline` | `{ color, width }` so app-drawn limbs match the art's line (width in a 1000-unit art box; omit for unlined art). |
 
 ## Three ways to add a style

@@ -53,7 +53,6 @@ export const PROPS: Record<string, PropDef> = {
   crystal: { layer: "front", html: '<div class="aav-w aav-w-crystal" data-k="0"><i class="glow"></i><svg viewBox="0 0 40 48"><path d="M20 1l17 15-17 31L3 16z" fill="#a78bfa"/><path d="M20 1l17 15H3z" fill="#c4b5fd"/><path d="M20 1v46M3 16l17 6 17-6" stroke="#ede9fe" stroke-width="1" fill="none" opacity=".8"/></svg><b></b><b></b><b></b></div>' },
   blush: { layer: "front", html: '<div class="aav-w aav-w-blush" data-k="3.5"><i></i><i></i></div>' },
   hand: { layer: "front", anchored: true, html: (a) => armHTML(a.artStyle, a.anchors, "front") },
-  arm: { layer: "back", anchored: true, html: (a) => armHTML(a.artStyle, a.anchors, "back") },
 };
 
 

@@ -1,14 +1,14 @@
-// The app-drawn arm and hand (waving, raised to ask). Four ways, chosen per style:
+// The app-drawn arm and hand (waving, raised to ask). Three ways, chosen per style:
 //
 //  forearm  – 2D half-body art (default for busts). A head-and-shoulders crop shows no
 //             elbow, so only a forearm rises from below the frame, in front of the
-//             shoulder, in the style's sleeve colour and line. It waves about the elbow,
-//             which stays out of view, and only swings outward so the hand never covers the face.
-//  sprite   – 3D/picture art. A drawn arm on a rendered character looks wrong, so the style
-//             supplies a real raised arm cut from a matching image (`armSprite`); it sits
-//             behind the body and waves about its own elbow.
-//  floating – abstract characters with no body: a small hand beside the head.
-//  none     – no arm (pictures without an arm sprite).
+//             shoulder, in the style's sleeve colour and line, with the hand at chin height.
+//             It waves about the elbow, which stays out of view, and only swings outward so
+//             the hand never covers the face.
+//  floating – a hand beside the head, the way emoji hold theirs: a drawn hand for abstract
+//             characters, or the style's own hand images (`hands`) for picture styles.
+//  none     – no hand. Half-body pictures that already have arms at their sides get this:
+//             adding a raised arm to them always reads as a third arm.
 import type { Anchors, StyleArt } from "./types";
 
 type Pt = { x: number; y: number };
@@ -20,12 +20,11 @@ const darken = (hex: string, k: number) => {
 const f1 = (n: number) => n.toFixed(1);
 const esc = (s: string) => s.replace(/[&"<>]/g, (c) => ({ "&": "&amp;", '"': "&quot;", "<": "&lt;", ">": "&gt;" })[c]!);
 
-export type ArmMode = "forearm" | "sprite" | "floating" | "none";
+export type ArmMode = "forearm" | "floating" | "none";
 export function armMode(art: StyleArt): ArmMode {
   if (art.arm === "attached") return "forearm";
   if (art.arm) return art.arm;
-  if (art.armSprite) return "sprite";
-  if (art.tier === "picture") return "none";
+  if (art.tier === "picture") return art.hands ? "floating" : "none";
   return art.bust ? "forearm" : "floating";
 }
 
@@ -33,7 +32,7 @@ export function armMode(art: StyleArt): ArmMode {
  *  over the body so the arm reads as in front of the shoulder) up to the wrist beside the head. */
 export function forearmGeometry(A: Anchors) {
   const U = 1000, hw = A.hw;
-  const H: Pt = { x: Math.min(0.88, A.cx + hw * 0.66) * U, y: (A.ey + hw * 0.02) * U };             // wrist, beside the cheek
+  const H: Pt = { x: Math.min(0.9, A.cx + hw * 0.74) * U, y: (A.chin - hw * 0.08) * U };             // wrist at chin height, a natural small wave
   const edge = (A.br ?? A.cx + hw * 0.95) - hw * 0.16;                                            // keep the elbow over the clothes
   const B: Pt = { x: Math.max(H.x, Math.min(H.x + hw * 0.24 * U, edge * U)), y: 1.12 * U };       // elbow, out of view
   return { B, H, w0: hw * 0.2 * U, w1: hw * 0.3 * U, hand: hw * 0.38 * U, angle: (Math.atan2(H.x - B.x, B.y - H.y) * 180) / Math.PI };
@@ -47,12 +46,11 @@ const HAND = [
   '<rect x="-6.5" y="-34" width="13" height="34" rx="6.5" transform="translate(-19 -20) rotate(-40)"/>',
 ].join("");
 
-/** HTML for the front layer (forearm, hand) or the back layer (an arm sprite behind the body). */
+/** HTML for the front layer (forearm and hand, or a floating hand). */
 export function armHTML(art: StyleArt, anchors: Anchors | undefined, layer: "front" | "back"): string {
   const mode = armMode(art);
   if (mode === "none") return "";
-  if (mode === "floating") return layer === "front" ? FLOATING : "";
-  if (mode === "sprite") return layer === "back" ? spriteHTML(art) : "";
+  if (mode === "floating") return layer === "front" ? (art.hands ? handImages(art.hands) : FLOATING) : "";
   if (layer === "back" || !anchors) return "";
   const g = forearmGeometry(anchors), skin = art.skin || "#f2c6a0", sleeve = art.sleeve || "#6b7280";
   const ow = art.outline?.width ?? 0, oc = art.outline?.color ?? "#000";
@@ -73,18 +71,10 @@ export function armHTML(art: StyleArt, anchors: Anchors | undefined, layer: "fro
     + (ow ? seg(0, oc) : "") + seg(0, sleeve) + shade + hand + `</g></g></svg>`;
 }
 
-// A real arm cut from a matching picture: sleeve and hand are two clips of the same image so the
-// sleeve alone can be recoloured to the outfit. Everything is in % of the sprite image.
-function spriteHTML(art: StyleArt): string {
-  const sp = art.armSprite!; const [x, y, w] = sp.box, src = esc(sp.src);
-  const img = (poly: string, filter = "") => `<img alt="" draggable="false" src="${src}" style="clip-path:polygon(${poly})${filter ? `;filter:${filter}` : ""}">`;
-  // tint: greyscale the sleeve, then multiply by the outfit colour inside the sleeve's own silhouette
-  const sleeve = sp.tint
-    ? img(sp.sleeve, sp.sleeveFilter || "grayscale(1) brightness(1.55) contrast(.9)") + `<i style="background:${esc(sp.tint)};clip-path:polygon(${sp.sleeve});-webkit-mask-image:url(&quot;${src}&quot;);mask-image:url(&quot;${src}&quot;)"></i>`
-    : img(sp.sleeve, sp.sleeveFilter);
-  return `<div class="aav-arm3d" style="left:${x * 100}%;top:${y * 100}%;width:${w * 100}%;--aav-arm-in:-60deg;--aav-wave-a:2deg;--aav-wave-b:-11deg;--aav-raise:-5deg">`
-    + `<div class="aav-arm-all" style="transform-origin:${sp.shoulder[0]}% ${sp.shoulder[1]}%"><div class="aav-arm-fore" style="transform-origin:${sp.pivot[0]}% ${sp.pivot[1]}%">`
-    + sleeve + img(sp.hand) + `</div></div></div>`;
+// Picture hands (e.g. Fluent's 3D ✋ and 👋): both are present, and the prop's wave/raise class picks one.
+function handImages(h: { wave?: string; raise?: string }): string {
+  const img = (src: string | undefined, cls: string) => (src ? `<img class="${cls}" alt="" draggable="false" src="${esc(src)}">` : "");
+  return `<div class="aav-w aav-w-hand aav-w-hand3d" data-k="0">${img(h.wave || h.raise, "aav-hand-wave")}${img(h.raise || h.wave, "aav-hand-raise")}</div>`;
 }
 
 // For abstract styles with no body: a small hand beside the head.

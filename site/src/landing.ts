@@ -132,7 +132,7 @@ const CREDITS: [string, string, string, string, string][] = [
   ["Avataaars", "Pablo Stanley", "Free for personal and commercial use", "https://avataaars.com/", "The playful illustration system that half the internet's avatars come from."],
   ["Gaze", "DiceBear", "CC0 1.0", "https://www.dicebear.com/styles/gaze", "A friendly blob with very expressive eyes."],
   ["react-nice-avatar", "Dapi (dapi-labs)", "MIT", "https://github.com/dapi-labs/react-nice-avatar", "Layered SVG avatars for React."],
-  ["Fluent Emoji", "Microsoft", "MIT", "https://github.com/microsoft/fluentui-emoji", "Familiar, friendly 3D emoji; used here as a picture style."],
+  ["Fluent Emoji", "Microsoft", "MIT", "https://github.com/microsoft/fluentui-emoji", "Friendly 3D emoji heads, with Fluent's own 3D hands for waving and asking."],
 ];
 $("credits").innerHTML = CREDITS.map(([n, who, lic, url, txt]) => `<div class="credit"><b><a href="${url}">${n}</a></b><small>by ${esc(who)}</small><span class="lic">${esc(lic)}</span><p style="margin-top:6px">${esc(txt)}</p></div>`).join("")
   + `<div class="credit"><b>Built with</b><small>tools we rely on</small><p><a href="https://vite.dev">Vite</a>, <a href="https://esbuild.github.io">esbuild</a>, <a href="https://react.dev">React</a>, <a href="https://www.typescriptlang.org">TypeScript</a>, <a href="https://playwright.dev">Playwright</a>.</p></div>`;

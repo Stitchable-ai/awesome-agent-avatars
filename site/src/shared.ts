@@ -12,7 +12,7 @@ export const CAPS: Record<string, [string, boolean][]> = {
   avataaars: [["eyes follow you", true], ["blinks", true], ["16 faces", true], ["talks", true]],
   nice: [["eyes follow you", true], ["blinks", true], ["7 faces", true], ["talks", true]],
   gaze: [["eyes follow you", true], ["blinks", true], ["12 eye shapes", true], ["no mouth", false]],
-  fluent: [["tilts toward you", true], ["any picture", true], ["no blink", false], ["1 face", false]],
+  fluent: [["tilts toward you", true], ["3D hands", true], ["no blink", false], ["1 face", false]],
 };
 export async function renderDefaults(): Promise<StyleArt[]> { return Promise.all(STYLES.map((s) => s.render(s.defaults()))); }
 export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);

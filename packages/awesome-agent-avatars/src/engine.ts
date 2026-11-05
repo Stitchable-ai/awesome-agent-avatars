@@ -7,7 +7,6 @@ import { defaultMotion } from "./motion";
 import { PROPS } from "./props";
 import { stylesheet } from "./css";
 import { attachInteractions } from "./interactions";
-import { armMode } from "./arm";
 import type { AvatarOptions, BotAvatar, Clip, FaceName, LookDirection, MotionPack, PokeName, Pose, StyleArt } from "./types";
 
 const PI2 = Math.PI * 2, D2R = Math.PI / 180;
@@ -215,13 +214,12 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     const rec = STATES[a.state], want = new Set<string>(([] as string[]).concat(rec.prop || [], rec.wear || []));
     for (const [id, until] of Object.entries(a.flashes)) if (a.T < (until as number)) want.add(id);
     if (want.has("cape")) want.add("bow");
-    if (want.has("hand") && armMode(style) === "sprite") want.add("arm");
     return want;
   }
   function syncProps() {
     const want = propIds();
     for (const [id, el] of a.propEls) if (!want.has(id)) { a.propEls.delete(id); el.classList.add("out"); setTimeout(() => el.remove(), 280); }
-    for (const id of ["hand", "arm"]) { const el = a.propEls.get(id); if (el) { const w = !!STATES[a.state].wave; el.classList.toggle("wave", w); el.classList.toggle("raise", !w); } }
+    for (const id of ["hand"]) { const el = a.propEls.get(id); if (el) { const w = !!STATES[a.state].wave; el.classList.toggle("wave", w); el.classList.toggle("raise", !w); } }
     for (const id of want) {
       const P = PROPS[id]; if (a.propEls.has(id) || !P) continue;
       const el = document.createElement("div");
@@ -229,7 +227,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
       el.className = "aav-prop" + (a.quietProps ? "" : " in") + (P.badge ? " badge" : ""); el.dataset.p = id;
       if (!a.quietProps) setTimeout(() => el.classList.remove("in"), 900);
       el.innerHTML = typeof P.html === "function" ? P.html(a) : P.html;
-      if (id === "hand" || id === "arm") el.classList.add(STATES[a.state].wave ? "wave" : "raise");
+      if (id === "hand") el.classList.add(STATES[a.state].wave ? "wave" : "raise");
       (P.layer === "front" ? front : P.layer === "back" ? back : fx).append(el);
       a.propEls.set(id, el);
     }

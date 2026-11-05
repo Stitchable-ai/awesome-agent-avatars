@@ -114,7 +114,7 @@ Each style is its own import, so you only ship what you use. The art libraries a
 | `awesome-agent-avatars/styles/avataaars` | [Avataaars](https://avataaars.com/) by Pablo Stanley, via DiceBear | Free for personal and commercial use | 41.7 KB + DiceBear core |
 | `awesome-agent-avatars/styles/gaze` | [Gaze](https://www.dicebear.com) by DiceBear | CC0 1.0 | 3.6 KB + DiceBear core |
 | `awesome-agent-avatars/styles/nice` | [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) by Dapi | MIT | 34.6 KB (+ your React) |
-| `awesome-agent-avatars/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) by Microsoft | MIT | 1.5 KB (images from a pinned CDN commit, or self-host) |
+| `awesome-agent-avatars/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) heads and hands by Microsoft | MIT | 1.5 KB (images from a pinned CDN commit, or self-host) |
 | `awesome-agent-avatars` | the engine: motion, props, CSS | MIT | **23.7 KB**, no dependencies |
 | `awesome-agent-avatars/react` | React bindings | MIT | +0.3 KB |
 
@@ -164,7 +164,7 @@ Open-source avatar art you can animate with this engine today. Check each licenc
 | Art | Creator | Licence | How to use it |
 |---|---|---|---|
 | [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) | Dapi | MIT | built in: `awesome-agent-avatars/styles/nice` |
-| [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (3D) | Microsoft | MIT | built in: `awesome-agent-avatars/styles/fluent` (with 3D raised arms) |
+| [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (3D) | Microsoft | MIT | built in: `awesome-agent-avatars/styles/fluent` (18 3D heads with Fluent's own 3D hands) |
 | [Boring Avatars](https://github.com/boringdesigners/boring-avatars) | Boring Designers | MIT | `pictureStyle()` or a parts style (help wanted) |
 | [OpenMoji](https://github.com/hfg-gmuend/openmoji) | HfG Schwäbisch Gmünd | CC BY-SA 4.0 | `pictureStyle()` (share-alike applies to the art) |
 | [Noto Emoji](https://github.com/googlefonts/noto-emoji) | Google | Apache 2.0 (images), OFL 1.1 (fonts) | `pictureStyle()` |

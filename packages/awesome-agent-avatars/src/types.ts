@@ -49,25 +49,12 @@ export interface StyleArt {
   bust?: boolean;
   /** How the arm appears when waving or asking:
    *  "forearm"  (default for 2D busts): a forearm rises from below the frame, elbow out of view;
-   *  "sprite"   (default when armSprite is set): a real arm cut from a matching picture;
-   *  "floating" (default for non-bust parts styles): a small hand beside the head, for abstract characters;
-   *  "none"     (default for pictures without armSprite). */
-  arm?: "forearm" | "sprite" | "floating" | "none" | "attached";
-  /** A raised arm cut from a matching picture (for 3D/picture styles). Coordinates are % of the sprite image. */
-  armSprite?: {
-    src: string;
-    /** where the sprite image sits on the art box: [left, top, width] as fractions (it is square) */
-    box: [number, number, number];
-    /** clip-path polygons: the hand (left as is) and the sleeve (tinted to the outfit) */
-    hand: string;
-    sleeve: string;
-    /** multiply the greyscaled sleeve by this colour, so a borrowed sleeve matches the outfit */
-    tint?: string;
-    sleeveFilter?: string;
-    /** the elbow (wave pivot) and the shoulder (raise pivot), in % */
-    pivot: [number, number];
-    shoulder: [number, number];
-  };
+   *  "floating" (default otherwise): a hand beside the head, the way emoji hold theirs. Picture styles
+   *             can supply hand images (`hands`); a picture style without them shows no hand;
+   *  "none". Never use a drawn arm on a half-body picture that already has arms at its sides. */
+  arm?: "forearm" | "floating" | "none" | "attached";
+  /** Hand images for picture styles (same art style as the picture): waving and raised to ask. */
+  hands?: { wave?: string; raise?: string };
   /** The art's line, so app-drawn limbs match it (width in a 1000-unit art box). */
   outline?: { color: string; width: number };
 }

@@ -15,10 +15,14 @@ export function pictureStyle(cfg: {
   id: string; name: string; credit: Credit; src: string;
   faces?: Partial<Record<string, string>>;
   anchors?: Anchors; bust?: boolean; skin?: string; sleeve?: string;
+  /** empty margin around the picture, as a fraction of its box (anchors are given for the unpadded image) */
+  pad?: number;
   /** let the user pick from several images */
   choices?: { value: string; label: string; src: string }[];
 }): AvatarStyle<{ src: string }> {
-  const img = (src: string) => `<img alt="" draggable="false" src="${esc(src)}">`;
+  const pad = cfg.pad ?? 0;
+  const img = (src: string) => `<img alt="" draggable="false" src="${esc(src)}"${pad ? ` style="box-sizing:border-box;padding:${(pad * 100).toFixed(2)}%"` : ""}>`;
+  const fit = (a: Anchors): Anchors => { const m = (v: number) => pad + v * (1 - 2 * pad); const o: any = {}; for (const [k, v] of Object.entries(a)) o[k] = k === "hw" ? v * (1 - 2 * pad) : m(v as number); return o; };
   const fields: Field[] = cfg.choices ? [{ key: "src", label: "Picture", type: "select", options: cfg.choices.map((c) => ({ value: c.src, label: c.label })) }] : [];
   return {
     id: cfg.id, name: cfg.name, tier: "picture", credit: cfg.credit, fields,
@@ -28,7 +32,7 @@ export function pictureStyle(cfg: {
       for (const [k, v] of Object.entries(cfg.faces || {})) if (v) (faces as any)[k] = img(v);
       return {
         id: cfg.id, tier: "picture", faces, bust: cfg.bust ?? true, skin: cfg.skin, sleeve: cfg.sleeve,
-        anchors: cfg.anchors ?? { cx: 0.5, ey: 0.36, hw: 0.5, crown: 0.06, my: 0.5, chin: 0.6, chest: 0.8, sx: 0.78, sy: 0.84 },
+        anchors: fit(cfg.anchors ?? { cx: 0.5, ey: 0.36, hw: 0.5, crown: 0.06, my: 0.5, chin: 0.6, chest: 0.8 }),
         rot: { yaw: 0.8, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 10, y: 16 }, lift: 0.7,
       };
     },

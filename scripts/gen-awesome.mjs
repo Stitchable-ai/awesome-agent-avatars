@@ -21,7 +21,7 @@ for (const f of readdirSync(dist).filter((f) => f.endsWith(".min.json")).sort())
 }
 const OTHER = [
   "| [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) | Dapi | MIT | built in: `awesome-agent-avatars/styles/nice` |",
-  "| [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (3D) | Microsoft | MIT | built in: `awesome-agent-avatars/styles/fluent` (with 3D raised arms) |",
+  "| [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (3D) | Microsoft | MIT | built in: `awesome-agent-avatars/styles/fluent` (18 3D heads with Fluent's own 3D hands) |",
   "| [Boring Avatars](https://github.com/boringdesigners/boring-avatars) | Boring Designers | MIT | `pictureStyle()` or a parts style (help wanted) |",
   "| [OpenMoji](https://github.com/hfg-gmuend/openmoji) | HfG Schwäbisch Gmünd | CC BY-SA 4.0 | `pictureStyle()` (share-alike applies to the art) |",
   "| [Noto Emoji](https://github.com/googlefonts/noto-emoji) | Google | Apache 2.0 (images), OFL 1.1 (fonts) | `pictureStyle()` |",
