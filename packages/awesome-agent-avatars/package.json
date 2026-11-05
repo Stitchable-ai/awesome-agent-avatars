@@ -1,5 +1,5 @@
 {
-  "name": "bot-styles",
+  "name": "awesome-agent-avatars",
   "version": "0.1.0",
   "description": "Bring your AI agent to life: one motion engine, 58 agent states, hot-swappable open-source avatar styles.",
   "type": "module",
@@ -91,8 +91,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Stitchable-ai/open-stitch-bot-styles.git",
-    "directory": "packages/bot-styles"
+    "url": "https://github.com/Stitchable-ai/awesome-agent-avatars.git",
+    "directory": "packages/awesome-agent-avatars"
   },
   "homepage": "https://bot-styles.stitchable.ai"
 }

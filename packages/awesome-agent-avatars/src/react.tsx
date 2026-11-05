@@ -37,7 +37,7 @@ export const AgentAvatar = forwardRef<BotAvatar | null, AgentAvatarProps>(functi
   useEffect(() => { av.current?.setGlow(!!glow); }, [glow, av.current]);
   useImperativeHandle(ref, () => av.current as BotAvatar, [av.current]);
 
-  return createElement("div", { ref: host, className, style: { width: size ?? "100%", ...style }, "data-bot-styles": "" });
+  return createElement("div", { ref: host, className, style: { width: size ?? "100%", ...style }, "data-awesome-agent-avatars": "" });
 });
 
 /** Render a style's art for some options; re-renders only when the options change. */

@@ -6,7 +6,7 @@ import { mkdirSync, readdirSync, rmSync, renameSync } from "node:fs";
 import { serve } from "../tests/serve.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
-const media = root + "media/", tmp = "/tmp/bot-styles-media/";
+const media = root + "media/", tmp = "/tmp/awesome-agent-avatars-media/";
 mkdirSync(media, { recursive: true }); rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });
 const { url, close } = await serve(root + "site/dist/");
 const b = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
@@ -46,7 +46,7 @@ await clip("hero", "/", { width: 1280, height: 760 }, ".hero > div:nth-child(2)"
 }, { width: 560, fps: 10, colors: 96 });
 // 2. interactions on the playground cards
 await clip("interactions", "/playground.html", { width: 1280, height: 520 }, "#gal", async (p, bx) => {
-  const cards = await p.$$(".card .bs-av"), B = []; for (const c of cards) B.push(await c.boundingBox());
+  const cards = await p.$$(".card .aav-av"), B = []; for (const c of cards) B.push(await c.boundingBox());
   const at = (i, fx, fy) => [B[i].x + B[i].width * fx, B[i].y + B[i].height * fy];
   await glide(p, [at(0, 0.1, 0.1), at(2, 0.5, 0.9), at(4, 0.9, 0.1)]);
   await p.mouse.click(...at(0, 0.5, 0.5)); await wait(p, 600);

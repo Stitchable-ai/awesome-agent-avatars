@@ -17,7 +17,7 @@ export interface Anchors {
   /** mouth y */ my: number;
   /** chin y */ chin: number;
   /** chest y (held props) */ chest?: number;
-  /** shoulder (the arm's root, inside the clothes) */ sx?: number; sy?: number;
+  /** shoulder (inside the clothes) and the clothes' right edge */ sx?: number; sy?: number; br?: number;
 }
 
 /** Everything the engine needs from a style. Faces are HTML/SVG strings. */
@@ -47,9 +47,27 @@ export interface StyleArt {
   lift?: number;
   /** A head-and-shoulders picture: anchored below the frame so tilts never show the cut. */
   bust?: boolean;
-  /** How the app-drawn arm appears: "attached" (default for busts: rooted in the shoulder,
-   *  behind the body), "floating" (default otherwise: a small hand beside the head) or "none". */
-  arm?: "attached" | "floating" | "none";
+  /** How the arm appears when waving or asking:
+   *  "forearm"  (default for 2D busts): a forearm rises from below the frame, elbow out of view;
+   *  "sprite"   (default when armSprite is set): a real arm cut from a matching picture;
+   *  "floating" (default for non-bust parts styles): a small hand beside the head, for abstract characters;
+   *  "none"     (default for pictures without armSprite). */
+  arm?: "forearm" | "sprite" | "floating" | "none" | "attached";
+  /** A raised arm cut from a matching picture (for 3D/picture styles). Coordinates are % of the sprite image. */
+  armSprite?: {
+    src: string;
+    /** where the sprite image sits on the art box: [left, top, width] as fractions (it is square) */
+    box: [number, number, number];
+    /** clip-path polygons: the hand (left as is) and the sleeve (tinted to the outfit) */
+    hand: string;
+    sleeve: string;
+    /** multiply the greyscaled sleeve by this colour, so a borrowed sleeve matches the outfit */
+    tint?: string;
+    sleeveFilter?: string;
+    /** the elbow (wave pivot) and the shoulder (raise pivot), in % */
+    pivot: [number, number];
+    shoulder: [number, number];
+  };
   /** The art's line, so app-drawn limbs match it (width in a 1000-unit art box). */
   outline?: { color: string; width: number };
 }
@@ -169,7 +187,7 @@ export interface AvatarOptions {
   autoSleep?: false | { bored: number };
   /** "auto" (default) follows prefers-reduced-motion */
   reducedMotion?: boolean | "auto";
-  /** inject the stylesheet once (default true). Set false and import bot-styles/styles.css under a strict CSP. */
+  /** inject the stylesheet once (default true). Set false and import awesome-agent-avatars/styles.css under a strict CSP. */
   injectStyles?: boolean;
   /** render one frame and never animate (thumbnails, screenshots) */
   static?: boolean;

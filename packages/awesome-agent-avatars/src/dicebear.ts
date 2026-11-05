@@ -1,5 +1,5 @@
 // DiceBear adapter. DiceBear 10 styles are data-only JSON definitions; we wrap every
-// component in <g class="bs-part-<name>"> by transforming the definition (no art is
+// component in <g class="aav-part-<name>"> by transforming the definition (no art is
 // forked), which gives the engine addressable eyes, brows and mouth in any DiceBear style.
 // Peer dependency: @dicebear/core (and @dicebear/styles for the presets).
 import { Avatar, Style } from "@dicebear/core";
@@ -10,7 +10,7 @@ type Definition = { meta?: any; components: Record<string, { variants: Record<st
 function tag(node: any): any {
   if (Array.isArray(node)) return node.map(tag);
   if (!node || typeof node !== "object") return node;
-  if (node.type === "component" && typeof node.name === "string") return { name: "g", type: "element", attributes: { class: `bs-part-${node.name}` }, children: [{ ...node }] };
+  if (node.type === "component" && typeof node.name === "string") return { name: "g", type: "element", attributes: { class: `aav-part-${node.name}` }, children: [{ ...node }] };
   const out: any = {};
   for (const [k, v] of Object.entries(node)) out[k] = k === "attributes" ? v : tag(v);
   return out;
@@ -51,7 +51,7 @@ export interface DicebearPreset<O extends StyleOptions> {
   art?: Omit<StyleArt, "id" | "tier" | "faces">;
 }
 
-/** Turn a DiceBear definition into an editable bot-styles style. */
+/** Turn a DiceBear definition into an editable awesome-agent-avatars style. */
 export function dicebearStyle<O extends StyleOptions>(p: DicebearPreset<O>): AvatarStyle<O> {
   let tagged: InstanceType<typeof Style> | null = null;
   const style = () => (tagged ??= new Style(tag(p.definition)));

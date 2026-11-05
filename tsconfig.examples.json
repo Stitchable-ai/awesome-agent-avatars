@@ -13,10 +13,10 @@
     "noEmit": true,
     "types": ["vite/client"],
     "paths": {
-      "bot-styles": ["./packages/bot-styles/src/index.ts"],
-      "bot-styles/react": ["./packages/bot-styles/src/react.tsx"],
-      "bot-styles/dicebear": ["./packages/bot-styles/src/dicebear.ts"],
-      "bot-styles/styles/*": ["./packages/bot-styles/src/styles/*.ts"],
+      "awesome-agent-avatars": ["./packages/awesome-agent-avatars/src/index.ts"],
+      "awesome-agent-avatars/react": ["./packages/awesome-agent-avatars/src/react.tsx"],
+      "awesome-agent-avatars/dicebear": ["./packages/awesome-agent-avatars/src/dicebear.ts"],
+      "awesome-agent-avatars/styles/*": ["./packages/awesome-agent-avatars/src/styles/*.ts"],
       "@examples/*": ["./examples/*"]
     }
   },

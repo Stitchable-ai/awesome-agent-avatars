@@ -1,6 +1,6 @@
 import "./site.css";
-import { createAvatar, defaultMotion, extendMotion, REACTIONS, FACES, agentPresence } from "bot-styles";
-import type { BotAvatar, PokeName, StyleArt, LookDirection } from "bot-styles";
+import { createAvatar, defaultMotion, extendMotion, REACTIONS, FACES, agentPresence } from "awesome-agent-avatars";
+import type { BotAvatar, PokeName, StyleArt, LookDirection } from "awesome-agent-avatars";
 import { STYLES, CAPS, renderDefaults } from "./shared";
 
 // shorter timers so visitors see the hand-offs
@@ -104,7 +104,7 @@ function main() {
     run([["sending", 1100, "<b>Sending</b>: you pressed Enter (it nods)"], ["thinking", 2400, "<b>Thinking</b>: reasoning"], ["searching", 2200, "<b>Searching</b>: web_search"], ["reading", 2400, "<b>Reading</b>: read_file"],
       ["coding", 2600, "<b>Coding</b>: edit_file"], ["running", 2200, "<b>Running</b>: run_command"], ["streaming", 2800, "<b>Streaming</b>: the answer comes in"], ["finished", 4200, "<b>Finished</b>: double spin, bounce, then idle"], ["idle", 0, ""]]);
   }
-  (window as any).BS_PAGE = { setAll, all, avs, smalls, runTurn, run };
+  (window as any).AAV_PAGE = { setAll, all, avs, smalls, runTurn, run };
 }
 
 // ---------- screenshot sheets (used by tests and the README images) ----------

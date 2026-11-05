@@ -3,14 +3,14 @@
 //   randomOptions(), groupFields() and an AvatarRecipe JSON you can save anywhere.
 // Copy it, restyle it, or replace it: the editor UI belongs to your app.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AgentAvatar, useStyleArt } from "bot-styles/react";
-import { groupFields, randomOptions, REACTIONS } from "bot-styles";
-import type { AvatarRecipe, AvatarStyle, BotAvatar, Field, StyleOptions } from "bot-styles";
+import { AgentAvatar, useStyleArt } from "awesome-agent-avatars/react";
+import { groupFields, randomOptions, REACTIONS } from "awesome-agent-avatars";
+import type { AvatarRecipe, AvatarStyle, BotAvatar, Field, StyleOptions } from "awesome-agent-avatars";
 import "./editor.css";
 
 const PREVIEW_STATES = ["idle", "waving", "listening", "thinking", "working", "streaming", "blocked", "finished", "celebrate", "sleeping", "turntable"];
 
-export function Editor({ styles, storageKey = "bot-styles:recipe" }: { styles: AvatarStyle<any>[]; storageKey?: string }) {
+export function Editor({ styles, storageKey = "awesome-agent-avatars:recipe" }: { styles: AvatarStyle<any>[]; storageKey?: string }) {
   const saved = useMemo<AvatarRecipe | null>(() => { try { return JSON.parse(localStorage.getItem(storageKey) || "null"); } catch { return null; } }, [storageKey]);
   const [styleId, setStyleId] = useState(saved?.style && styles.some((s) => s.id === saved.style) ? saved.style : styles[0].id);
   const style = styles.find((s) => s.id === styleId)!;

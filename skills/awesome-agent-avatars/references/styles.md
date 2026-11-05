@@ -17,14 +17,15 @@ interface AvatarStyle<O> {
 | Field | What it is |
 |---|---|
 | `faces` | HTML/SVG per face name. Only `neutral` is required; missing faces fall back (`laughing → happy → neutral`, `angry → squinted → focused`, …). Add `talk` (mouth open) and the avatar talks while streaming. |
-| `tier` | `"parts"`: parts are tagged `class="bs-part-<name>"` (eyes, mouth, eyebrows, nose, glasses, hair, head…) and move independently. `"picture"`: one image; it tilts, hops, wears props and plays every state, but cannot blink. |
+| `tier` | `"parts"`: parts are tagged `class="aav-part-<name>"` (eyes, mouth, eyebrows, nose, glasses, hair, head…) and move independently. `"picture"`: one image; it tilts, hops, wears props and plays every state, but cannot blink. |
 | `parallax` | depth per tagged part in px on a 200 px stage (eyes ≈ 4–10, hair ≈ 1, ears negative). This is what makes flat art feel 2.5D. |
 | `closedFaces` | faces whose art already has closed eyes, so lids are not drawn on top. |
 | `anchors` | where worn props sit (headphones, hat, cape, crystal, blush, hand), as fractions of the art box. Leave it out for tagged styles: the engine measures eyes, mouth, hair and head. |
 | `bust` | a head-and-shoulders picture: anchored below the frame so a tilt or hop never shows the cut edge. |
 | `rot`, `tilt`, `lift` | how far flat art may turn (a flat card reads badly past ~15°), how much the head tilts toward the pointer, how high it hops. |
 | `skin`, `sleeve` | colours for the app-drawn arm and hand. |
-| `arm` | `"attached"` (default for busts): the arm roots inside the shoulder, behind the art, so the body hides the joint; the hand is drawn in front. `"floating"` (default otherwise): a small hand beside the head, for abstract characters. `"none"`. The shoulder is measured from a tagged `bs-part-clothes`, or set `anchors.sx`/`anchors.sy`. |
+| `arm` | how the arm appears when waving or asking. `"forearm"` (default for 2D busts): a forearm rises from below the frame in front of the shoulder, elbow out of view, in your sleeve colour and line (it is kept over the measured `aav-part-clothes`). `"sprite"` (default when `armSprite` is set): a real raised arm cut from a matching picture, for 3D/picture styles. `"floating"` (default for other parts styles): a small hand beside the head, for abstract characters. `"none"` (default for pictures without a sprite). |
+| `armSprite` | for picture styles: an image of the same character with a raised arm, plus clip polygons for the hand and sleeve, where it sits on the art box, the elbow pivot, and a `tint` that recolours the borrowed sleeve to the outfit. See `styles/fluent.ts`. |
 | `outline` | `{ color, width }` so app-drawn limbs match the art's line (width in a 1000-unit art box; omit for unlined art). |
 
 ## Three ways to add a style
@@ -32,7 +33,7 @@ interface AvatarStyle<O> {
 **1. Any picture** (PNG, SVG, WebP, a 3D render, your mascot):
 
 ```ts
-import { pictureStyle } from "bot-styles";
+import { pictureStyle } from "awesome-agent-avatars";
 export const mascot = pictureStyle({
   id: "mascot", name: "Our mascot", src: "/mascot.png",
   faces: { happy: "/mascot-happy.png", sleepy: "/mascot-sleepy.png" }, // optional extra expressions
@@ -43,7 +44,7 @@ export const mascot = pictureStyle({
 **2. Any DiceBear style.** DiceBear 10 styles are data-only JSON definitions, so the adapter can tag every component without forking the art:
 
 ```ts
-import { dicebearStyle, variantField, colorField } from "bot-styles/dicebear";
+import { dicebearStyle, variantField, colorField } from "awesome-agent-avatars/dicebear";
 import lorelei from "@dicebear/styles/lorelei.json";
 
 export const loreleiStyle = dicebearStyle({
@@ -57,17 +58,17 @@ export const loreleiStyle = dicebearStyle({
 
 The credit (author, source, licence) is read from the definition's own metadata.
 
-**3. From scratch.** Return SVG strings whose parts carry `class="bs-part-eyes"`, `bs-part-mouth`, and so on. That is the whole contract.
+**3. From scratch.** Return SVG strings whose parts carry `class="aav-part-eyes"`, `aav-part-mouth`, and so on. That is the whole contract.
 
 ```ts
-import { defineStyle } from "bot-styles";
+import { defineStyle } from "awesome-agent-avatars";
 export const blob = defineStyle({
   id: "blob", name: "Blob", tier: "parts",
   credit: { author: "You", license: "MIT" },
   fields: [{ key: "color", label: "Colour", type: "color", swatches: ["#9cc8fb", "#fbabaf", "#9bd78d"] }],
   defaults: () => ({ color: "#9cc8fb" }),
   render: ({ color }) => {
-    const face = (eyes: string) => `<svg viewBox="0 0 100 100"><rect class="bs-part-head" x="15" y="25" width="70" height="55" rx="27" fill="${color}"/><g class="bs-part-eyes">${eyes}</g></svg>`;
+    const face = (eyes: string) => `<svg viewBox="0 0 100 100"><rect class="aav-part-head" x="15" y="25" width="70" height="55" rx="27" fill="${color}"/><g class="aav-part-eyes">${eyes}</g></svg>`;
     return {
       id: "blob", tier: "parts", parallax: { eyes: 4 },
       faces: { neutral: face('<circle cx="38" cy="52" r="5"/><circle cx="62" cy="52" r="5"/>'), happy: face('<path d="M32 54q6-8 12 0M56 54q6-8 12 0" stroke="#000" stroke-width="3" fill="none"/>') },
@@ -78,7 +79,7 @@ export const blob = defineStyle({
 
 ## Sharing a style with the community
 
-Publish it as an npm package named `bot-styles-style-<name>` that exports an `AvatarStyle`, then open a pull request adding it to the community list in the README. Please:
+Publish it as an npm package named `awesome-agent-avatars-style-<name>` that exports an `AvatarStyle`, then open a pull request adding it to the community list in the README. Please:
 
 - keep the original author's credit in `credit` and in your README (some licences, such as CC BY 4.0, require it);
 - ship no art you do not have the right to redistribute;
@@ -93,4 +94,4 @@ Publish it as an npm package named `bot-styles-style-<name>` that exports an `Av
 - `normalizeOptions(style, saved)` → drops unknown keys and invalid values (safe for recipes saved by older versions);
 - `createStyleRegistry([...styles])` → `recipe(styleId, options)` and `render(recipe)`.
 
-A saved avatar is a small JSON **recipe**: `{ "v": 1, "style": "micah", "options": { ... }, "name": "Stitch" }`. Store it with your user. See [examples/react-editor](https://github.com/Stitchable-ai/open-stitch-bot-styles/tree/main/examples/react-editor) for a complete editor built only from this interface.
+A saved avatar is a small JSON **recipe**: `{ "v": 1, "style": "micah", "options": { ... }, "name": "Stitch" }`. Store it with your user. See [examples/react-editor](https://github.com/Stitchable-ai/awesome-agent-avatars/tree/main/examples/react-editor) for a complete editor built only from this interface.

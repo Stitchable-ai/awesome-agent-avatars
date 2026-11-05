@@ -1,11 +1,11 @@
 ---
-name: bot-styles
-description: Add an animated, interactive avatar for an AI agent to a web, React, Next.js, Remix, Vite, Tauri or Electron app with the bot-styles library. Use when the user wants an agent/assistant/bot avatar or mascot that reacts to agent activity (typing, thinking, tool calls, streaming, approvals, errors, sleep), a character picker or avatar editor, or a custom avatar style.
+name: awesome-agent-avatars
+description: Add an animated, interactive avatar for an AI agent to a web, React, Next.js, Remix, Vite, Tauri or Electron app with the awesome-agent-avatars library. Use when the user wants an agent/assistant/bot avatar or mascot that reacts to agent activity (typing, thinking, tool calls, streaming, approvals, errors, sleep), a character picker or avatar editor, or a custom avatar style.
 ---
 
-# bot-styles: an avatar for an AI agent
+# awesome-agent-avatars: an avatar for an AI agent
 
-bot-styles is one motion engine (58 agent states, reactions, pointer interactions) that animates hot-swappable art styles. The app supplies a style and tells the avatar what the agent is doing; the engine does the rest.
+awesome-agent-avatars is one motion engine (58 agent states, reactions, pointer interactions) that animates hot-swappable art styles. The app supplies a style and tells the avatar what the agent is doing; the engine does the rest.
 
 ## 1. Look before writing
 
@@ -16,7 +16,7 @@ bot-styles is one motion engine (58 agent states, reactions, pointer interaction
 ## 2. Install
 
 ```sh
-npm i bot-styles                                  # engine, no dependencies
+npm i awesome-agent-avatars                                  # engine, no dependencies
 npm i @dicebear/core @dicebear/styles             # for micah, avataaars, gaze or any DiceBear style
 npm i react-nice-avatar                           # only for the "nice" style (React apps)
 ```
@@ -28,8 +28,8 @@ Pick a style: `micah` (friendly illustrated person, CC BY 4.0, attribution requi
 React / Next.js / Remix (the React entry already has `"use client"`; it renders an empty box on the server):
 
 ```tsx
-import { AgentAvatar, useStyleArt } from "bot-styles/react";
-import { micah } from "bot-styles/styles/micah";
+import { AgentAvatar, useStyleArt } from "awesome-agent-avatars/react";
+import { micah } from "awesome-agent-avatars/styles/micah";
 
 export function AgentFace({ state }: { state: string }) {
   const art = useStyleArt(micah);            // useStyleArt(micah, savedOptions) for a customised look
@@ -40,15 +40,15 @@ export function AgentFace({ state }: { state: string }) {
 Plain DOM, Tauri, Electron, Vue, Svelte (create on mount, `destroy()` on unmount):
 
 ```ts
-import { createAvatar } from "bot-styles";
-import { gaze } from "bot-styles/styles/gaze";
+import { createAvatar } from "awesome-agent-avatars";
+import { gaze } from "awesome-agent-avatars/styles/gaze";
 const avatar = createAvatar(el, await gaze.render(gaze.defaults()), { state: "idle" });
 ```
 
 ## 4. Drive it from agent events
 
 ```ts
-import { agentPresence } from "bot-styles";
+import { agentPresence } from "awesome-agent-avatars";
 const bot = agentPresence(avatar);   // or (state) => setAvatarState(state) in React
 // composer input → bot.typing()      submit → bot.sent()          reasoning → bot.thinking()
 // tool call start → bot.tool(name)  (web_search → searching, read_file → reading, edit_file → coding, bash → running, computer → controlling)
@@ -64,13 +64,13 @@ Every style exposes `fields`, `defaults()` and `render(options)`. Build the edit
 
 ## 6. Optional: a custom style
 
-Any image: `pictureStyle({ id, name, src, credit })`. Any DiceBear style: `dicebearStyle({ definition, fields, defaults, faces, art })` from `bot-styles/dicebear`. From scratch: return SVG strings whose parts carry `class="bs-part-eyes"`, `bs-part-mouth`, etc. See [references/styles.md](references/styles.md) and [references/motion.md](references/motion.md) for custom states and clips.
+Any image: `pictureStyle({ id, name, src, credit })`. Any DiceBear style: `dicebearStyle({ definition, fields, defaults, faces, art })` from `awesome-agent-avatars/dicebear`. From scratch: return SVG strings whose parts carry `class="aav-part-eyes"`, `aav-part-mouth`, etc. See [references/styles.md](references/styles.md) and [references/motion.md](references/motion.md) for custom states and clips.
 
 ## Rules
 
 - Keep the art's credit visible where the app lists credits/licences (Micah is CC BY 4.0: attribution is required). Never copy third-party art into the repo; import it from the npm packages.
 - Do not start the engine during server rendering; use the React component or create it in a mount hook.
-- Under a strict CSP (`style-src` without `'unsafe-inline'`), pass `injectStyles: false` and import `bot-styles/styles.css`.
+- Under a strict CSP (`style-src` without `'unsafe-inline'`), pass `injectStyles: false` and import `awesome-agent-avatars/styles.css`.
 - Respect reduced motion (default) and do not drive states from timers when real events exist.
 - Verify in the running app: the avatar renders, follows the pointer on hover, and changes state during a real agent turn. Report anything you could not check.
 

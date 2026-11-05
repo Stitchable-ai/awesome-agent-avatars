@@ -108,13 +108,13 @@ function tick(now: number) {
 }
 function wake() { if (!raf && typeof requestAnimationFrame === "function" && live.size) { last = performance.now(); raf = requestAnimationFrame(tick); } }
 function observer() {
-  if (!io && typeof IntersectionObserver === "function") io = new IntersectionObserver((es) => es.forEach((e) => { const a = (e.target as any).__bsAvatar; if (a) a.visible = e.isIntersecting; }));
+  if (!io && typeof IntersectionObserver === "function") io = new IntersectionObserver((es) => es.forEach((e) => { const a = (e.target as any).__aavAvatar; if (a) a.visible = e.isIntersecting; }));
   return io;
 }
 /** Add the stylesheet to the document once. Called by createAvatar unless injectStyles is false. */
 export function injectStyles(doc: Document = document) {
-  if (styled || doc.getElementById("bot-styles-css")) { styled = true; return; }
-  const el = doc.createElement("style"); el.id = "bot-styles-css"; el.textContent = stylesheet; doc.head.append(el); styled = true;
+  if (styled || doc.getElementById("awesome-agent-avatars-css")) { styled = true; return; }
+  const el = doc.createElement("style"); el.id = "awesome-agent-avatars-css"; el.textContent = stylesheet; doc.head.append(el); styled = true;
 }
 
 let uidSeq = 0;
@@ -134,10 +134,10 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
   const { CLIPS, STATES } = { CLIPS: motion.clips, STATES: motion.states };
   const r = rng(hash(art.id + (opts.seed || "")));
   let style = art;
-  root.classList.add("bs-av");
-  root.innerHTML = '<div class="bs-glow"></div><div class="bs-shadow"></div><div class="bs-drag"><div class="bs-body"><div class="bs-back"></div><div class="bs-art"></div><div class="bs-front"></div></div></div><div class="bs-fx"></div>';
+  root.classList.add("aav-av");
+  root.innerHTML = '<div class="aav-glow"></div><div class="aav-shadow"></div><div class="aav-drag"><div class="aav-body"><div class="aav-back"></div><div class="aav-art"></div><div class="aav-front"></div></div></div><div class="aav-fx"></div>';
   const $ = (s: string) => root.querySelector(s) as HTMLElement;
-  const dragEl = $(".bs-drag"), body = $(".bs-body"), artEl = $(".bs-art"), fx = $(".bs-fx"), front = $(".bs-front"), back = $(".bs-back"), shadow = $(".bs-shadow");
+  const dragEl = $(".aav-drag"), body = $(".aav-body"), artEl = $(".aav-art"), fx = $(".aav-fx"), front = $(".aav-front"), back = $(".aav-back"), shadow = $(".aav-shadow");
 
   const a: any = {
     root, visible: true, ph: r() * PI2, uid: "bs" + ++uidSeq,
@@ -151,7 +151,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     unit: 1, compact: false, anchored: false, backside: false, artStyle: art, anchors: undefined as any, lastAttention: 0, wakeTo: null as string | null,
     autoBored: opts.autoSleep === false ? 0 : opts.autoSleep?.bored ?? 45, noBlink: !!opts.static, reduced: false,
   };
-  (root as any).__bsAvatar = a; observer()?.observe(root);
+  (root as any).__aavAvatar = a; observer()?.observe(root);
   const measure = () => { a.unit = (root.clientWidth || 200) / 200; const c = root.clientWidth > 0 && root.clientWidth < 56; if (c !== a.compact) { a.compact = c; root.classList.toggle("compact", c); } };
   const ro = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null; ro?.observe(root); measure();
 
@@ -168,7 +168,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     if (a.faces[name]) return a.faces[name];
     const holder = document.createElement("div"); holder.innerHTML = uniqueIds((style.faces as any)[name], a.uid);
     const parts: Record<string, { els: HTMLElement[]; k: number }> = {};
-    for (const [part, k] of Object.entries(style.parallax || {})) { const els = holder.querySelectorAll<HTMLElement>(".bs-part-" + part); if (els.length) parts[part] = { els: [...els], k }; }
+    for (const [part, k] of Object.entries(style.parallax || {})) { const els = holder.querySelectorAll<HTMLElement>(".aav-part-" + part); if (els.length) parts[part] = { els: [...els], k }; }
     return (a.faces[name] = { nodes: [...holder.childNodes], parts });
   }
   function paintFace(name: string) { const f = faceEntry(name); artEl.replaceChildren(...f.nodes); a.parts = f.parts; a.face = name; }
@@ -193,14 +193,14 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
         for (const e of drawn) { const q = e.getBoundingClientRect(); if (!q.width && !q.height) continue; l = Math.min(l, q.left); t = Math.min(t, q.top); rr = Math.max(rr, q.right); b = Math.max(b, q.bottom); }
         return l > rr ? null : { l: (l - box.left) / box.width, t: (t - box.top) / box.height, r: (rr - box.left) / box.width, b: (b - box.top) / box.height };
       };
-      const E = R(".bs-part-eyes"), M = R(".bs-part-mouth"), F = R(style.faceSelector || ".bs-part-head, .bs-part-face, .bs-part-shape"), H = R(".bs-part-hair, .bs-part-top"), Cl = R(".bs-part-clothes");
+      const E = R(".aav-part-eyes"), M = R(".aav-part-mouth"), F = R(style.faceSelector || ".aav-part-head, .aav-part-face, .aav-part-shape"), H = R(".aav-part-hair, .aav-part-top"), Cl = R(".aav-part-clothes");
       const ey = E ? (E.t + E.b) / 2 : F ? F.t + (F.b - F.t) * 0.42 : 0.4;
       const hw = F ? F.r - F.l : E ? (E.r - E.l) * 2.1 : 0.5;
       const my = M ? (M.t + M.b) / 2 : ey + hw * 0.3;
       const cx = E ? (E.l + E.r) / 2 : F ? (F.l + F.r) / 2 : 0.5;
       A = { cx, ey, hw, crown: Math.min(H ? H.t : 1, F ? F.t : 1, ey - hw * 0.45), my, chin: M ? M.b + (M.b - ey) * 0.3 : F ? F.b : ey + hw * 0.55 };
       // the shoulder: a point inside the clothes, part-way out toward the edge, where an arm can root
-      if (Cl) { A.sx = Math.min(0.97, cx + (Cl.r - cx) * 0.62); A.sy = Cl.t + (Cl.b - Cl.t) * 0.3; }
+      if (Cl) { A.sx = Math.min(0.97, cx + (Cl.r - cx) * 0.62); A.sy = Cl.t + (Cl.b - Cl.t) * 0.3; A.br = Cl.r; }
     }
     A = { ...A, ...(style.anchorAdjust || {}) };
     A.chest = A.chest ?? Math.min(0.88, A.chin + 0.2);
@@ -215,7 +215,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     const rec = STATES[a.state], want = new Set<string>(([] as string[]).concat(rec.prop || [], rec.wear || []));
     for (const [id, until] of Object.entries(a.flashes)) if (a.T < (until as number)) want.add(id);
     if (want.has("cape")) want.add("bow");
-    if (want.has("hand") && armMode(style) === "attached") want.add("arm");
+    if (want.has("hand") && armMode(style) === "sprite") want.add("arm");
     return want;
   }
   function syncProps() {
@@ -225,7 +225,9 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     for (const id of want) {
       const P = PROPS[id]; if (a.propEls.has(id) || !P) continue;
       const el = document.createElement("div");
-      el.className = "bs-prop in" + (P.badge ? " badge" : ""); el.dataset.p = id;
+      // props pop in when a state starts; a hot-swap of the art keeps them steady
+      el.className = "aav-prop" + (a.quietProps ? "" : " in") + (P.badge ? " badge" : ""); el.dataset.p = id;
+      if (!a.quietProps) setTimeout(() => el.classList.remove("in"), 900);
       el.innerHTML = typeof P.html === "function" ? P.html(a) : P.html;
       if (id === "hand" || id === "arm") el.classList.add(STATES[a.state].wave ? "wave" : "raise");
       (P.layer === "front" ? front : P.layer === "back" ? back : fx).append(el);
@@ -247,7 +249,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     return a.queue.shift();
   }
   function startClip(name: string, bridgeDur = 0.32) {
-    if (!CLIPS[name]) throw new Error(`bot-styles: no clip named "${name}"`);
+    if (!CLIPS[name]) throw new Error(`awesome-agent-avatars: no clip named "${name}"`);
     if (a.clip) a.bridge = { pose: wrapYaw(a.base), t: 0, dur: bridgeDur };
     a.clip = { name, t: 0 };
   }
@@ -385,7 +387,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
       const op = backside && FEATURES.has(part) ? "0" : "";
       for (const el of els) { el.style.transform = tf; el.style.opacity = op; }
     }
-    for (const el of front.querySelectorAll<HTMLElement>(".bs-w[data-k]")) { const k = +el.dataset.k! * u; el.style.transform = `translate(${lx * k}px,${-ly * k}px)`; }
+    for (const el of front.querySelectorAll<HTMLElement>(".aav-w[data-k]")) { const k = +el.dataset.k! * u; el.style.transform = `translate(${lx * k}px,${-ly * k}px)`; }
     const cur = a.propEls.get("cursor");
     if (cur) { const c = a.cursorAt(a.clip.t); (cur.firstChild as HTMLElement).style.transform = `translate(${c.x * 70 * u}px,${c.y * 60 * u}px)`; const t6 = a.clip.t % 6; cur.classList.toggle("click", (t6 > 1.15 && t6 < 1.45) || (t6 > 2.75 && t6 < 3.05) || (t6 > 4.35 && t6 < 4.65)); }
     if (Object.keys(a.flashes).length && [...propIds()].sort().join() !== a.propKey) { for (const [id, t] of Object.entries(a.flashes)) if (a.T >= (t as number)) delete a.flashes[id]; syncProps(); }
@@ -420,10 +422,10 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
       a.reduced = !!on; root.classList.toggle("rm", a.reduced);
       if (a.reduced) { a.pokes = []; a.lookS = null; a.reactS = null; a.clip.t = 0; a.bridge = null; a.blinkT = 0; const keep = a.T; a.step(0); a.T = keep; } else wake();
     },
-    setArt: (next) => { applyArt(next); syncProps(); a.step(0); },
+    setArt: (next) => { applyArt(next); a.quietProps = true; syncProps(); a.quietProps = false; a.step(0); },
     flash,
     simulate: (secs) => { for (let i = 0; i < secs * 60; i++) a.step(1 / 60); },
-    destroy: () => { live.delete(a); io?.unobserve(root); ro?.disconnect(); detach(); for (const el of a.propEls.values()) el.remove(); root.replaceChildren(); root.classList.remove("bs-av"); },
+    destroy: () => { live.delete(a); io?.unobserve(root); ro?.disconnect(); detach(); for (const el of a.propEls.values()) el.remove(); root.replaceChildren(); root.classList.remove("aav-av"); },
   };
   a.api = api;
 

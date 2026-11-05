@@ -19,13 +19,13 @@ const page = async (path, viewport = { width: 1280, height: 900 }) => {
 
 // ---- playground interactions ----
 const p = await page("/playground.html");
-await p.waitForFunction(() => window.BS_PAGE?.avs?.length === 5);
+await p.waitForFunction(() => window.AAV_PAGE?.avs?.length === 5);
 await p.waitForTimeout(500);
-const st = (i) => p.evaluate((i) => { const a = BS_PAGE.avs[i], r = a.root; return { state: a.state, props: [...r.querySelectorAll(".bs-prop")].map((e) => e.dataset.p), back: r.classList.contains("back"), drag: r.querySelector(".bs-drag").style.transform }; }, i);
-const box = async (i) => (await p.$$(".card .bs-av"))[i].boundingBox();
+const st = (i) => p.evaluate((i) => { const a = AAV_PAGE.avs[i], r = a.root; return { state: a.state, props: [...r.querySelectorAll(".aav-prop")].map((e) => e.dataset.p), back: r.classList.contains("back"), drag: r.querySelector(".aav-drag").style.transform }; }, i);
+const box = async (i) => (await p.$$(".card .aav-av"))[i].boundingBox();
 let B = await box(0);
 await p.mouse.move(B.x + B.width * 0.9, B.y + B.height * 0.2, { steps: 5 }); await p.waitForTimeout(700);
-const tf = await p.evaluate(() => BS_PAGE.avs[0].root.querySelector(".bs-body").style.transform);
+const tf = await p.evaluate(() => AAV_PAGE.avs[0].root.querySelector(".aav-body").style.transform);
 ok("hover turns the head toward the pointer", /rotateY\((\d+\.?\d*)deg\)/.test(tf) && +tf.match(/rotateY\(([-\d.]+)deg/)[1] > 3, tf);
 await p.mouse.down(); await p.mouse.move(B.x + B.width * 0.95, B.y + B.height * 0.3, { steps: 4 });
 await p.mouse.move(B.x + B.width * 0.4, B.y + B.height * 0.4, { steps: 6 }); await p.waitForTimeout(80);
@@ -46,11 +46,11 @@ await p.keyboard.press("Enter"); await p.waitForTimeout(200); s = await st(3); o
 const seen = new Set(); for (let k = 0; k < 44; k++) { seen.add((await st(3)).state); await p.waitForTimeout(500); }
 ok("a full turn passes every step", ["thinking", "searching", "reading", "coding", "running", "streaming", "finished", "idle"].every((x) => seen.has(x)), [...seen]);
 await p.click("#need"); await p.waitForTimeout(2500); s = await st(0); ok("needs approval: hand + ? bubble", s.state === "blocked" && s.props.includes("hand") && s.props.includes("ask"), s);
-const arms = await p.evaluate(() => BS_PAGE.avs.map((a) => ({ hand: !!a.root.querySelector('[data-p="hand"] svg'), arm: !!a.root.querySelector('.bs-back [data-p="arm"] .bs-arm'), floating: !!a.root.querySelector(".bs-w-hand") })));
-ok("half-body styles raise an attached arm; Gaze keeps a floating hand", [0, 1, 2, 4].every((i) => arms[i].hand && arms[i].arm && !arms[i].floating) && arms[3].floating && !arms[3].arm, arms);
+const arms = await p.evaluate(() => AAV_PAGE.avs.map((a) => ({ forearm: !!a.root.querySelector('.aav-front [data-p="hand"] svg.aav-arm'), sprite: !!a.root.querySelector('.aav-back [data-p="arm"] .aav-arm3d img'), floating: !!a.root.querySelector(".aav-w-hand") })));
+ok("2D busts raise a forearm, the 3D picture raises its own 3D arm, Gaze keeps a floating hand", [0, 1, 2].every((i) => arms[i].forearm && !arms[i].sprite && !arms[i].floating) && arms[4].sprite && !arms[4].forearm && arms[3].floating, arms);
 await p.click("#approve"); await p.waitForTimeout(300); s = await st(0); ok("approve: approving", s.state === "approving", s);
-await p.evaluate(() => BS_PAGE.avs[0].setState("thinking"));
-const swapped = await p.evaluate(async () => { const before = BS_PAGE.avs[0].root.querySelector(".bs-art").innerHTML.length; document.querySelector("#swap button").click(); await new Promise((r) => setTimeout(r, 200)); const a = BS_PAGE.avs[0]; return { state: a.state, changed: a.root.querySelector(".bs-art").innerHTML.length !== before }; });
+await p.evaluate(() => AAV_PAGE.avs[0].setState("thinking"));
+const swapped = await p.evaluate(async () => { const before = AAV_PAGE.avs[0].root.querySelector(".aav-art").innerHTML.length; document.querySelector("#swap button").click(); await new Promise((r) => setTimeout(r, 200)); const a = AAV_PAGE.avs[0]; return { state: a.state, changed: a.root.querySelector(".aav-art").innerHTML.length !== before }; });
 ok("hot-swap keeps the state", swapped.state === "thinking" && swapped.changed, swapped);
 await p.close();
 
@@ -58,22 +58,22 @@ await p.close();
 for (const g of ["Lifecycle", "Reactions", "Indicators", "Moments,Showcase"]) {
   const q = await page("/playground.html#matrix=" + g, { width: 2400, height: 900 });
   await q.waitForTimeout(1500);
-  const n = await q.evaluate(() => document.querySelectorAll(".bs-av").length);
-  const blank = await q.evaluate(() => [...document.querySelectorAll(".bs-av")].filter((a) => !a.querySelector(".bs-art").children.length).length);
+  const n = await q.evaluate(() => document.querySelectorAll(".aav-av").length);
+  const blank = await q.evaluate(() => [...document.querySelectorAll(".aav-av")].filter((a) => !a.querySelector(".aav-art").children.length).length);
   ok(`sheet ${g}: ${n} tiles, none blank`, n > 0 && blank === 0, { n, blank });
   await q.close();
 }
 
 // ---- editor: fields drive the art; the recipe is JSON ----
 const e = await page("/editor.html");
-await e.waitForSelector(".bse-stage .bs-av .bs-art svg, .bse-stage .bs-av .bs-art img", { timeout: 15000 });
-const before = await e.evaluate(() => document.querySelector(".bse-stage .bs-art").innerHTML);
+await e.waitForSelector(".bse-stage .aav-av .aav-art svg, .bse-stage .aav-av .aav-art img", { timeout: 15000 });
+const before = await e.evaluate(() => document.querySelector(".bse-stage .aav-art").innerHTML);
 await e.click(".bse-swatches button:nth-child(5)"); await e.waitForTimeout(600);
-const after = await e.evaluate(() => document.querySelector(".bse-stage .bs-art").innerHTML);
+const after = await e.evaluate(() => document.querySelector(".bse-stage .aav-art").innerHTML);
 ok("editor: changing a field re-renders the art", before !== after);
 for (const name of ["Avataaars", "Nice Avatar", "Gaze", "Fluent Emoji 3D", "Micah"]) {
   await e.click(`.bse-styles button:has-text("${name}")`); await e.waitForTimeout(500);
-  const has = await e.evaluate(() => !!document.querySelector(".bse-stage .bs-art svg, .bse-stage .bs-art img, .bse-stage .bs-art div"));
+  const has = await e.evaluate(() => !!document.querySelector(".bse-stage .aav-art svg, .bse-stage .aav-art img, .bse-stage .aav-art div"));
   ok(`editor: ${name} renders`, has);
 }
 const recipe = await e.evaluate(() => JSON.parse(document.querySelector(".bse details pre").textContent));
@@ -83,7 +83,7 @@ await e.close();
 // ---- landing ----
 const l = await page("/");
 await l.waitForTimeout(1200);
-ok("landing: five hero avatars", (await l.evaluate(() => document.querySelectorAll("#hero .bs-av").length)) === 5);
+ok("landing: five hero avatars", (await l.evaluate(() => document.querySelectorAll("#hero .aav-av").length)) === 5);
 await l.close();
 
 console.log(errors.length ? "ERRORS\n" + errors.join("\n") : "NO_ERRORS");

@@ -3,7 +3,7 @@
 Behaviour is data. A motion pack is `{ clips, states, groups }`, and the default one ships 58 states and ~60 clips. Use `extendMotion` to change timings, add states or replace clips; pass the result as `motion` to `createAvatar` or `<AgentAvatar>`.
 
 ```ts
-import { defaultMotion, extendMotion } from "bot-styles";
+import { defaultMotion, extendMotion } from "awesome-agent-avatars";
 
 const motion = extendMotion(defaultMotion, {
   states: {
@@ -50,7 +50,7 @@ Clips start from wherever the avatar is: switching clips or states blends over ~
 Props are HTML snippets drawn by the app, the same for every style. Register your own:
 
 ```ts
-import { registerProp } from "bot-styles";
+import { registerProp } from "awesome-agent-avatars";
 registerProp("coffee", { layer: "fx", html: '<div class="my-coffee">☕</div>' });   // fx = beside; front/back = worn
 ```
 

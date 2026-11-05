@@ -3,8 +3,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { defaultMotion, extendMotion, GROUPS, stateForTool, normalizeOptions, randomOptions, createStyleRegistry, pictureStyle, REACTIONS, PROPS } from "../packages/bot-styles/dist/index.js";
-import { dicebearStyle, variantField, colorField, creditOf } from "../packages/bot-styles/dist/dicebear.js";
+import { defaultMotion, extendMotion, GROUPS, stateForTool, normalizeOptions, randomOptions, createStyleRegistry, pictureStyle, REACTIONS, PROPS } from "../packages/awesome-agent-avatars/dist/index.js";
+import { dicebearStyle, variantField, colorField, creditOf } from "../packages/awesome-agent-avatars/dist/dicebear.js";
 
 const require = createRequire(import.meta.url);
 
@@ -48,9 +48,9 @@ const micahLike = dicebearStyle({
 
 test("dicebear adapter tags parts, keeps credit, maps None to probability 0", async () => {
   const art = await micahLike.render(micahLike.defaults());
-  assert.match(art.faces.neutral, /class="bs-part-eyes"/);
-  assert.match(art.faces.neutral, /class="bs-part-mouth"/);
-  assert.doesNotMatch(art.faces.neutral, /bs-part-glasses"><[^/]/, "no glasses drawn when None");
+  assert.match(art.faces.neutral, /class="aav-part-eyes"/);
+  assert.match(art.faces.neutral, /class="aav-part-mouth"/);
+  assert.doesNotMatch(art.faces.neutral, /aav-part-glasses"><[^/]/, "no glasses drawn when None");
   const withGlasses = await micahLike.render({ ...micahLike.defaults(), glassesVariant: "round" });
   assert.notEqual(withGlasses.faces.neutral, art.faces.neutral);
   assert.equal(art.skin, "#ac6651");
@@ -76,8 +76,8 @@ test("editor helpers: normalise, randomise, registry recipes", async () => {
 
 test("core is safe to import without a DOM (SSR)", async () => {
   assert.equal(typeof globalThis.document, "undefined");
-  const m = await import("../packages/bot-styles/dist/index.js");
+  const m = await import("../packages/awesome-agent-avatars/dist/index.js");
   assert.equal(typeof m.createAvatar, "function");
-  const r = await import("../packages/bot-styles/dist/react.js");
+  const r = await import("../packages/awesome-agent-avatars/dist/react.js");
   assert.equal(typeof r.AgentAvatar, "object", "React entry imports on the server");
 });

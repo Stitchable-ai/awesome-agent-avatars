@@ -4,5 +4,5 @@ site/dist/
 *.log
 .DS_Store
 /tmp/
-packages/bot-styles/LICENSE
-packages/bot-styles/THIRD_PARTY_NOTICES.md
+packages/awesome-agent-avatars/LICENSE
+packages/awesome-agent-avatars/THIRD_PARTY_NOTICES.md

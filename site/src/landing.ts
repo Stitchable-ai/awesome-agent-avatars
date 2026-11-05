@@ -1,6 +1,6 @@
 import "./site.css";
-import { createAvatar, defaultMotion, agentPresence } from "bot-styles";
-import type { BotAvatar } from "bot-styles";
+import { createAvatar, defaultMotion, agentPresence } from "awesome-agent-avatars";
+import type { BotAvatar } from "awesome-agent-avatars";
 import { STYLES, renderDefaults, esc } from "./shared";
 
 const arts = await renderDefaults();
@@ -53,9 +53,9 @@ const hl = (code: string) => esc(code)
   .replace(/(&quot;[^&]*?&quot;)/g, '<span class="s">$1</span>')
   .replace(/\b(import|from|export|const|await|return|function|new)\b/g, '<span class="k">$1</span>');
 const TABS: [string, string][] = [
-  ["Plain DOM · Tauri · Electron", `import { createAvatar } from "bot-styles";
-import { micah } from "bot-styles/styles/micah";
-import { gaze } from "bot-styles/styles/gaze";
+  ["Plain DOM · Tauri · Electron", `import { createAvatar } from "awesome-agent-avatars";
+import { micah } from "awesome-agent-avatars/styles/micah";
+import { gaze } from "awesome-agent-avatars/styles/gaze";
 
 const art = await micah.render(micah.defaults());       // or a saved recipe's options
 const avatar = createAvatar(document.querySelector("#bot"), art);
@@ -64,16 +64,16 @@ avatar.setState("thinking");      // any of the 58 states
 avatar.react("happy");            // a short reaction over any state
 avatar.look("left");              // turn the head
 avatar.setArt(await gaze.render(gaze.defaults()));  // hot-swap the style, keep the state`],
-  ["React", `import { AgentAvatar, useStyleArt } from "bot-styles/react";
-import { micah } from "bot-styles/styles/micah";
+  ["React", `import { AgentAvatar, useStyleArt } from "awesome-agent-avatars/react";
+import { micah } from "awesome-agent-avatars/styles/micah";
 
 export function Bot({ state }: { state: string }) {
   const art = useStyleArt(micah);                       // or useStyleArt(micah, savedOptions)
   return <AgentAvatar art={art} state={state} size={160} />;
 }`],
-  ["Next.js", `// app/components/bot.tsx: bot-styles/react already ships "use client"
-import { AgentAvatar, useStyleArt } from "bot-styles/react";
-import { gaze } from "bot-styles/styles/gaze";
+  ["Next.js", `// app/components/bot.tsx: awesome-agent-avatars/react already ships "use client"
+import { AgentAvatar, useStyleArt } from "awesome-agent-avatars/react";
+import { gaze } from "awesome-agent-avatars/styles/gaze";
 
 export default function Bot({ state }: { state: string }) {
   const art = useStyleArt(gaze);
@@ -81,22 +81,22 @@ export default function Bot({ state }: { state: string }) {
 }
 // The server renders an empty, sized box; the engine starts after hydration.`],
   ["Remix / React Router", `// Same component as React. Nothing runs on the server, so no ClientOnly wrapper is needed.
-import { AgentAvatar, useStyleArt } from "bot-styles/react";
-import { avataaars } from "bot-styles/styles/avataaars";
+import { AgentAvatar, useStyleArt } from "awesome-agent-avatars/react";
+import { avataaars } from "awesome-agent-avatars/styles/avataaars";
 
 export default function Route() {
   const art = useStyleArt(avataaars);
   return <AgentAvatar art={art} state="listening" size={140} />;
 }`],
   ["Strict CSP", `// The stylesheet is injected once by default. Under a strict CSP, ship it as a file:
-import "bot-styles/styles.css";
-import { createAvatar } from "bot-styles";
+import "awesome-agent-avatars/styles.css";
+import { createAvatar } from "awesome-agent-avatars";
 
 createAvatar(el, art, { injectStyles: false });`],
 ];
 const tabs = $("tabs"), code = $("code");
 TABS.forEach(([name, src], i) => { const b = document.createElement("button"); b.textContent = name; b.onclick = () => { code.innerHTML = hl(src); tabs.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); }; tabs.append(b); if (i === 0) b.click(); });
-$("code-presence").innerHTML = hl(`import { agentPresence } from "bot-styles";
+$("code-presence").innerHTML = hl(`import { agentPresence } from "awesome-agent-avatars";
 
 const bot = agentPresence(avatar);           // one avatar, an array, or a callback
 composer.addEventListener("input", () => bot.typing());   // listening, then idle after a pause
@@ -107,8 +107,8 @@ agent.on("text_delta", () => bot.streaming());           // it talks
 agent.on("approval_required", () => bot.needsInput());   // hand up; drowsy after 2 minutes
 agent.on("done", () => bot.done());          // double spin, sparkles, then idle
 agent.on("error", () => bot.error());`);
-$("code-style").innerHTML = hl(`import { pictureStyle } from "bot-styles";
-import { dicebearStyle, variantField } from "bot-styles/dicebear";
+$("code-style").innerHTML = hl(`import { pictureStyle } from "awesome-agent-avatars";
+import { dicebearStyle, variantField } from "awesome-agent-avatars/dicebear";
 import lorelei from "@dicebear/styles/lorelei.json";
 
 // Any picture: tilts, hops, sleeps, wears props, plays every state.

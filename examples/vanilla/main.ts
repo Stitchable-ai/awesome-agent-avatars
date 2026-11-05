@@ -1,8 +1,8 @@
 // No framework: the same code runs in a browser tab, a Tauri v2 webview or an Electron renderer.
-import { createAvatar, agentPresence } from "bot-styles";
-import type { AvatarStyle } from "bot-styles";
-import { micah } from "bot-styles/styles/micah";
-import { gaze } from "bot-styles/styles/gaze";
+import { createAvatar, agentPresence } from "awesome-agent-avatars";
+import type { AvatarStyle } from "awesome-agent-avatars";
+import { micah } from "awesome-agent-avatars/styles/micah";
+import { gaze } from "awesome-agent-avatars/styles/gaze";
 
 const styles: AvatarStyle<any>[] = [micah, gaze];
 const arts = await Promise.all(styles.map((s) => s.render(s.defaults())));

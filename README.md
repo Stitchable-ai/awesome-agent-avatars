@@ -1,11 +1,11 @@
 <div align="center">
 
-# Bot Styles
+# Awesome Agent Avatars
 
 **Make your AI agent feel alive.**
 
 One open-source motion engine for agent avatars: **58 agent states**, reactions and interactions, on **hot-swappable avatar styles**.<br>
-React · Next.js · Remix · Tauri · Electron · plain DOM. Core is ~22 KB gzipped with zero dependencies.
+React · Next.js · Remix · Tauri · Electron · plain DOM. Core is ~24 KB gzipped with zero dependencies.
 
 [**Live playground**](https://bot-styles.stitchable.ai/playground.html) · [Editor demo](https://bot-styles.stitchable.ai/editor.html) · [Docs](docs/) · [Add it to your agent](#for-coding-agents)
 
@@ -17,7 +17,7 @@ React · Next.js · Remix · Tauri · Electron · plain DOM. Core is ~22 KB gzip
 
 Agents spend most of their time doing things you cannot see: reasoning, calling tools, waiting on you. A spinner says *busy*. A face can say **thinking, reading, coding, needs you, done, asleep** at a glance, and it makes the agent feel like someone you work with.
 
-Agent companions like that have shown up inside recent AI products, but each one is a closed, single-character implementation. There are many good open-source avatar *art* libraries, and none of them move. Bot Styles is the missing layer in between:
+Agent companions like that have shown up inside recent AI products, but each one is a closed, single-character implementation. There are many good open-source avatar *art* libraries, and none of them move. Awesome Agent Avatars is the missing layer in between:
 
 - **Motion is shared, art is swappable.** One engine plays every state on every style. Change the look with `avatar.setArt()` and the behaviour stays exactly the same.
 - **Built on the commons.** It animates existing open-source avatar systems (DiceBear's styles, react-nice-avatar, Fluent Emoji) instead of shipping yet another character. Any picture works too.
@@ -48,14 +48,14 @@ Agent companions like that have shown up inside recent AI products, but each one
 ## Quick start
 
 ```sh
-npm i bot-styles @dicebear/core @dicebear/styles
+npm i awesome-agent-avatars @dicebear/core @dicebear/styles
 ```
 
-**React, Next.js, Remix** (`bot-styles/react` ships `"use client"`; the server renders an empty, sized box):
+**React, Next.js, Remix** (`awesome-agent-avatars/react` ships `"use client"`; the server renders an empty, sized box):
 
 ```tsx
-import { AgentAvatar, useStyleArt } from "bot-styles/react";
-import { micah } from "bot-styles/styles/micah";
+import { AgentAvatar, useStyleArt } from "awesome-agent-avatars/react";
+import { micah } from "awesome-agent-avatars/styles/micah";
 
 export function Bot({ state }: { state: string }) {
   const art = useStyleArt(micah);                  // or useStyleArt(micah, savedOptions)
@@ -66,8 +66,8 @@ export function Bot({ state }: { state: string }) {
 **Plain DOM, Tauri v2, Electron, Vue, Svelte:**
 
 ```ts
-import { createAvatar } from "bot-styles";
-import { gaze } from "bot-styles/styles/gaze";
+import { createAvatar } from "awesome-agent-avatars";
+import { gaze } from "awesome-agent-avatars/styles/gaze";
 
 const avatar = createAvatar(document.querySelector("#bot")!, await gaze.render(gaze.defaults()));
 avatar.setState("thinking");     // any of the 58 states
@@ -80,7 +80,7 @@ More: [frameworks and hosts](docs/frameworks.md) (Tauri WebViews, Electron, stri
 ## Wire it to your agent
 
 ```ts
-import { agentPresence } from "bot-styles";
+import { agentPresence } from "awesome-agent-avatars";
 
 const bot = agentPresence(avatar);                          // an avatar, an array, or (state) => setState(state)
 composer.addEventListener("input", () => bot.typing());     // listening, then idle after a pause
@@ -110,21 +110,21 @@ Each style is its own import, so you only ship what you use. The art libraries a
 
 | Import | Art | Licence | Gzipped |
 |---|---|---|---|
-| `bot-styles/styles/micah` | [Micah](https://www.figma.com/community/file/829741575478342595) by Micah Lanier, via DiceBear | CC BY 4.0 (attribution required) | 9.2 KB + DiceBear core 24.9 KB |
-| `bot-styles/styles/avataaars` | [Avataaars](https://avataaars.com/) by Pablo Stanley, via DiceBear | Free for personal and commercial use | 41.7 KB + DiceBear core |
-| `bot-styles/styles/gaze` | [Gaze](https://www.dicebear.com) by DiceBear | CC0 1.0 | 3.6 KB + DiceBear core |
-| `bot-styles/styles/nice` | [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) by Dapi | MIT | 34.6 KB (+ your React) |
-| `bot-styles/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) by Microsoft | MIT | 1.1 KB (images from a pinned CDN commit, or self-host) |
-| `bot-styles` | the engine: motion, props, CSS | MIT | **21.8 KB**, no dependencies |
-| `bot-styles/react` | React bindings | MIT | +0.4 KB |
+| `awesome-agent-avatars/styles/micah` | [Micah](https://www.figma.com/community/file/829741575478342595) by Micah Lanier, via DiceBear | CC BY 4.0 (attribution required) | 9.3 KB + DiceBear core 24.9 KB |
+| `awesome-agent-avatars/styles/avataaars` | [Avataaars](https://avataaars.com/) by Pablo Stanley, via DiceBear | Free for personal and commercial use | 41.7 KB + DiceBear core |
+| `awesome-agent-avatars/styles/gaze` | [Gaze](https://www.dicebear.com) by DiceBear | CC0 1.0 | 3.6 KB + DiceBear core |
+| `awesome-agent-avatars/styles/nice` | [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) by Dapi | MIT | 34.6 KB (+ your React) |
+| `awesome-agent-avatars/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) by Microsoft | MIT | 1.5 KB (images from a pinned CDN commit, or self-host) |
+| `awesome-agent-avatars` | the engine: motion, props, CSS | MIT | **23.7 KB**, no dependencies |
+| `awesome-agent-avatars/react` | React bindings | MIT | +0.3 KB |
 
 ### Bring your own style
 
-A style is anything that returns faces (SVG or images) and a few hints, and parts tagged `bs-part-eyes`, `bs-part-mouth`… move on their own.
+A style is anything that returns faces (SVG or images) and a few hints, and parts tagged `aav-part-eyes`, `aav-part-mouth`… move on their own.
 
 ```ts
-import { pictureStyle } from "bot-styles";
-import { dicebearStyle, variantField } from "bot-styles/dicebear";
+import { pictureStyle } from "awesome-agent-avatars";
+import { dicebearStyle, variantField } from "awesome-agent-avatars/dicebear";
 import lorelei from "@dicebear/styles/lorelei.json";
 
 export const mascot = pictureStyle({ id: "mascot", name: "Our mascot", src: "/mascot.png",
@@ -141,7 +141,7 @@ export const loreleiStyle = dicebearStyle({                 // any of DiceBear's
 
 Guide: [docs/styles.md](docs/styles.md). Motion is data too: add states, change timings or write clips with [docs/motion.md](docs/motion.md).
 
-**Community styles.** Publish a package named `bot-styles-style-<name>` exporting an `AvatarStyle`, then open a PR to list it here. None yet: be the first.
+**Community styles.** Publish a package named `awesome-agent-avatars-style-<name>` exporting an `AvatarStyle`, then open a PR to list it here. None yet: be the first.
 
 ### Build your own editor
 
@@ -153,15 +153,90 @@ Every style exposes the same editing interface: `fields` (select, colour, toggle
 
 [examples/react-editor](examples/react-editor) is a complete editor built only from that interface ([try it](https://bot-styles.stitchable.ai/editor.html)).
 
+## Awesome avatar art
+
+<!-- AWESOME:START (generated by scripts/gen-awesome.mjs) -->
+Open-source avatar art you can animate with this engine today. Check each licence before you ship; some require attribution or share-alike.
+
+<details>
+<summary><b>58 avatar systems</b>: 53 DiceBear styles plus 5 other sets (click to expand)</summary>
+
+| Art | Creator | Licence | How to use it |
+|---|---|---|---|
+| [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) | Dapi | MIT | built in: `awesome-agent-avatars/styles/nice` |
+| [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (3D) | Microsoft | MIT | built in: `awesome-agent-avatars/styles/fluent` (with 3D raised arms) |
+| [Boring Avatars](https://github.com/boringdesigners/boring-avatars) | Boring Designers | MIT | `pictureStyle()` or a parts style (help wanted) |
+| [OpenMoji](https://github.com/hfg-gmuend/openmoji) | HfG Schwäbisch Gmünd | CC BY-SA 4.0 | `pictureStyle()` (share-alike applies to the art) |
+| [Noto Emoji](https://github.com/googlefonts/noto-emoji) | Google | Apache 2.0 (images), OFL 1.1 (fonts) | `pictureStyle()` |
+| Your product's mascot | you | yours | `pictureStyle({ src, faces })` |
+| [Adventurer](https://www.figma.com/community/file/1184595184137881796) | [Lisa Wischofsky](https://www.instagram.com/lischi_art/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/adventurer.json` |
+| [Avataaars](https://avataaars.com/) | [Pablo Stanley](https://twitter.com/pablostanley) | [Free for personal and commercial use](https://avataaars.com/) | built in: `awesome-agent-avatars/styles/avataaars` |
+| [Big Ears](https://www.figma.com/community/file/986078800058673824) | [The Visual Team](https://thevisual.team/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/big-ears.json` |
+| [Big Smile](https://www.figma.com/community/file/881358461963645496) | [Ashley Seo](http://www.ashleyseo.com/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/big-smile.json` |
+| [Blobs](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/blobs.json` |
+| [Bottts](https://bottts.com/) | [Pablo Stanley](https://twitter.com/pablostanley) | [Free for personal and commercial use](https://bottts.com/) | `dicebearStyle()` + `@dicebear/styles/bottts.json` |
+| [Cameo](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/cameo.json` |
+| [Clay](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/clay.json` |
+| [Constellation](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/constellation.json` |
+| [Critters](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/critters.json` |
+| [Croodles](https://www.figma.com/community/file/966199982810283152) | [vijay verma](https://vjy.me/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/croodles.json` |
+| [Cutouts](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/cutouts.json` |
+| [Disco](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/disco.json` |
+| [Dylan](https://www.figma.com/community/file/1356575240759683500) | [Natalia Spivak](https://nataspvk.tilda.ws/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/dylan.json` |
+| [Fun Emoji](https://www.figma.com/community/file/968125295144990435) | [Davis Uche](https://www.instagram.com/davedirect3/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/fun-emoji.json` |
+| [Gaze](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | built in: `awesome-agent-avatars/styles/gaze` |
+| [Glass](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/glass.json` |
+| [Glyphs](https://www.figma.com/community/file/1249154526125777853) | [Matt Houser](https://x.com/mattkhouser) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/glyphs.json` |
+| [Icons](https://github.com/twbs/icons) | [The Bootstrap Authors](https://getbootstrap.com/) | [MIT](https://github.com/twbs/icons/blob/main/LICENSE) | `dicebearStyle()` + `@dicebear/styles/icons.json` |
+| [Identicon](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/identicon.json` |
+| [Initial Face](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/initial-face.json` |
+| [Initials](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/initials.json` |
+| [Landscape](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/landscape.json` |
+| [Line Face](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/line-face.json` |
+| [Loops](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/loops.json` |
+| [Lorelei](https://www.figma.com/community/file/1198749693280469639) | [Lisa Wischofsky](https://www.instagram.com/lischi_art/) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/lorelei.json` |
+| [Marbles](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/marbles.json` |
+| [Micah](https://www.figma.com/community/file/829741575478342595) | [Micah Lanier](https://dribbble.com/micahlanier) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | built in: `awesome-agent-avatars/styles/micah` |
+| [Miniavs](https://www.figma.com/community/file/923211396597067458) | [Webpixels](https://webpixels.io/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/miniavs.json` |
+| [Moods](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/moods.json` |
+| [Notionists](https://heyzoish.gumroad.com/l/notionists) | [Zoish](https://bio.link/heyzoish) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/notionists.json` |
+| [Open Peeps](https://www.openpeeps.com/) | [Pablo Stanley](https://twitter.com/pablostanley) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/open-peeps.json` |
+| [Patchwork](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/patchwork.json` |
+| [Personas](https://personas.draftbit.com/) | [Draftbit - draftbit.com](https://draftbit.com/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/personas.json` |
+| [Pixel Art](https://www.figma.com/community/file/1198754108850888330) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/pixel-art.json` |
+| [Pixelbot](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/pixelbot.json` |
+| [Planets](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/planets.json` |
+| [Rings](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/rings.json` |
+| [Shadows](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/shadows.json` |
+| [Shape Grid](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/shape-grid.json` |
+| [Shapes](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/shapes.json` |
+| [Slice](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/slice.json` |
+| [Sprouts](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/sprouts.json` |
+| [Squircles](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/squircles.json` |
+| [Stack](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/stack.json` |
+| [Stripes](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/stripes.json` |
+| [Thumbs](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/thumbs.json` |
+| [Toon Head](https://www.figma.com/community/file/1589627891082866389) | [Johan Melin](https://www.johanmelin.com) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `dicebearStyle()` + `@dicebear/styles/toon-head.json` |
+| [Triangles](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/triangles.json` |
+| [Voxel Art](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/voxel-art.json` |
+| [Voxel Bot](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/voxel-bot.json` |
+| [Waves](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/waves.json` |
+| [Weave](https://www.dicebear.com) | [DiceBear](https://www.dicebear.com) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | `dicebearStyle()` + `@dicebear/styles/weave.json` |
+
+</details>
+
+Know another open avatar set, or made a style? Open a PR adding it here.
+<!-- AWESOME:END -->
+
 ## For coding agents
 
 Install the skill into Claude Code, Codex, Cursor and other agents with one command:
 
 ```sh
-npx skills add Stitchable-ai/open-stitch-bot-styles
+npx skills add Stitchable-ai/awesome-agent-avatars
 ```
 
-Then ask your agent: *“Add an animated avatar for our agent with bot-styles, and drive it from our chat events.”* The skill ([skills/bot-styles](skills/bot-styles/SKILL.md)) tells it how to find your framework and agent events, install the right peers, mount the avatar, wire `agentPresence`, and keep the art credits.
+Then ask your agent: *“Add an animated avatar for our agent with awesome-agent-avatars, and drive it from our chat events.”* The skill ([skills/awesome-agent-avatars](skills/awesome-agent-avatars/SKILL.md)) tells it how to find your framework and agent events, install the right peers, mount the avatar, wire `agentPresence`, and keep the art credits.
 
 ## Examples
 
@@ -174,7 +249,7 @@ Then ask your agent: *“Add an animated avatar for our agent with bot-styles, a
 
 ## Thank you
 
-Bot Styles animates art made by other people, and it would not exist without them. If you ship a style, keep its credit.
+Awesome Agent Avatars animates art made by other people, and it would not exist without them. If you ship a style, keep its credit.
 
 - **[DiceBear](https://www.dicebear.com)** by **Florian Körner** and contributors (MIT). DiceBear 10's data-only style definitions are what let us tag eyes, brows and mouths in any style without forking a single drawing.
 - **Micah** by **[Micah Lanier](https://dribbble.com/micahlanier)**, the “[Avatar Illustration System](https://www.figma.com/community/file/829741575478342595)” (CC BY 4.0), remixed by DiceBear.

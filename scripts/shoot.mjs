@@ -2,7 +2,7 @@
 import { chromium } from "playwright";
 import { serve } from "../tests/serve.mjs";
 
-const out = process.argv[2] || "/tmp/bot-styles-shots";
+const out = process.argv[2] || "/tmp/awesome-agent-avatars-shots";
 const { url, close } = await serve(new URL("../site/dist/", import.meta.url).pathname);
 const b = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 for (const [path, name, w, h, full] of [["/", "landing", 1280, 900, true], ["/playground.html", "playground", 1280, 900, true], ["/editor.html", "editor", 1280, 860, false], ["/playground.html#worn", "worn", 1500, 700, true], ["/playground.html#react", "react", 1500, 700, true]]) {

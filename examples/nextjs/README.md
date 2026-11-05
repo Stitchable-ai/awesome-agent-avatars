@@ -3,7 +3,7 @@
 Two files to copy into an existing Next.js app:
 
 ```sh
-npm i bot-styles @dicebear/core @dicebear/styles
+npm i awesome-agent-avatars @dicebear/core @dicebear/styles
 ```
 
 - [`app/components/bot.tsx`](app/components/bot.tsx): a client component using `AgentAvatar` and `useStyleArt`.

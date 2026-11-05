@@ -1,10 +1,10 @@
 // The five styles the site shows, and helpers shared by its pages.
-import { micah } from "bot-styles/styles/micah";
-import { avataaars } from "bot-styles/styles/avataaars";
-import { gaze } from "bot-styles/styles/gaze";
-import { nice } from "bot-styles/styles/nice";
-import { fluent } from "bot-styles/styles/fluent";
-import type { AvatarStyle, StyleArt } from "bot-styles";
+import { micah } from "awesome-agent-avatars/styles/micah";
+import { avataaars } from "awesome-agent-avatars/styles/avataaars";
+import { gaze } from "awesome-agent-avatars/styles/gaze";
+import { nice } from "awesome-agent-avatars/styles/nice";
+import { fluent } from "awesome-agent-avatars/styles/fluent";
+import type { AvatarStyle, StyleArt } from "awesome-agent-avatars";
 
 export const STYLES: AvatarStyle<any>[] = [micah, avataaars, nice, gaze, fluent];
 export const CAPS: Record<string, [string, boolean][]> = {

@@ -70,11 +70,11 @@ export const nice = defineStyle<Opts>({
     await new Promise((r) => setTimeout(r, 0));
     const base = { ...o };
     const idx = parts({ ...base, ...FACES.neutral });
-    const tagged = (m: string) => { let i = -1; return m.replace(/<svg /g, () => { i++; return idx[i] ? `<svg class="bs-part-${idx[i]}" ` : "<svg "; }); };
+    const tagged = (m: string) => { let i = -1; return m.replace(/<svg /g, () => { i++; return idx[i] ? `<svg class="aav-part-${idx[i]}" ` : "<svg "; }); };
     const faces: Record<string, string> = {};
     for (const [f, fo] of Object.entries(FACES)) faces[f] = tagged(render({ ...base, ...fo }));
     return {
-      id: "nice", tier: "parts", faces: faces as StyleArt["faces"], bust: true, lift: 0.7, partUnits: "px", faceSelector: ".bs-part-face", outline: { color: "#000", width: 7 },
+      id: "nice", tier: "parts", faces: faces as StyleArt["faces"], bust: true, lift: 0.7, partUnits: "px", faceSelector: ".aav-part-face", outline: { color: "#000", width: 7 },
       skin: o.faceColor, sleeve: o.shirtColor, rot: { yaw: 0.75, pitch: 0.8, roll: 0.6, x: 0.6 }, tilt: { x: 8, y: 12 },
       parallax: { eyes: 4, eyebrows: 3.2, glasses: 3.6, nose: 2.6, mouth: 2, hair: 0.6 },
     };

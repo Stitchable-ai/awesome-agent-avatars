@@ -37,11 +37,11 @@ export function createStyleRegistry(styles: AvatarStyle<any>[]) {
     get: (id: string) => byId.get(id),
     add: (s: AvatarStyle<any>) => { byId.set(s.id, s); },
     recipe: (styleId: string, options?: StyleOptions, name?: string): AvatarRecipe => {
-      const s = byId.get(styleId); if (!s) throw new Error(`bot-styles: unknown style "${styleId}"`);
+      const s = byId.get(styleId); if (!s) throw new Error(`awesome-agent-avatars: unknown style "${styleId}"`);
       return { v: 1, style: styleId, options: normalizeOptions(s, options || s.defaults()), ...(name ? { name } : {}) };
     },
     async render(recipe: AvatarRecipe): Promise<StyleArt> {
-      const s = byId.get(recipe.style); if (!s) throw new Error(`bot-styles: unknown style "${recipe.style}"`);
+      const s = byId.get(recipe.style); if (!s) throw new Error(`awesome-agent-avatars: unknown style "${recipe.style}"`);
       return s.render(normalizeOptions(s, recipe.options));
     },
   };

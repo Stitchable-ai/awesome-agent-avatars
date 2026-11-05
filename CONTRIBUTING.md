@@ -6,7 +6,7 @@ Thanks for helping agents look alive. Everything here is open to contribution: s
 
 ```sh
 npm ci
-npm run build          # the library (packages/bot-styles → dist)
+npm run build          # the library (packages/awesome-agent-avatars → dist)
 npm test               # unit tests (node --test)
 npm run typecheck
 npm run dev            # site + playground at localhost:5173, reading the library source
@@ -17,17 +17,17 @@ npm run build:site && npx playwright install chromium && npm run test:browser
 
 | Path | What |
 |---|---|
-| `packages/bot-styles/src/engine.ts` | the runtime: clips, faces, blinks, pokes, reactions, gaze, drag, props |
-| `packages/bot-styles/src/motion.ts` | the default motion pack (states + clips, plain data) |
-| `packages/bot-styles/src/props.ts`, `css.ts` | app-drawn props and the stylesheet (every class and keyframe is prefixed `bs-`) |
-| `packages/bot-styles/src/styles/*` | built-in styles; `dicebear.ts` is the DiceBear adapter |
+| `packages/awesome-agent-avatars/src/engine.ts` | the runtime: clips, faces, blinks, pokes, reactions, gaze, drag, props |
+| `packages/awesome-agent-avatars/src/motion.ts` | the default motion pack (states + clips, plain data) |
+| `packages/awesome-agent-avatars/src/props.ts`, `css.ts` | app-drawn props and the stylesheet (every class and keyframe is prefixed `aav-`) |
+| `packages/awesome-agent-avatars/src/styles/*` | built-in styles; `dicebear.ts` is the DiceBear adapter |
 | `site/` | landing page, playground (with screenshot sheets at `#matrix=<Group>`, `#faces`, `#worn`, `#react`, `#arms`; `node scripts/sheet.mjs arms out.png` captures one) and editor |
 | `examples/` | copyable starting points |
-| `skills/bot-styles/` | the agent skill (`npx skills add …`) |
+| `skills/awesome-agent-avatars/` | the agent skill (`npx skills add …`) |
 
 ## Adding a style
 
-1. Prefer publishing it as your own package (`bot-styles-style-<name>`) and opening a PR to list it in the README. Built-in styles are kept few so the defaults stay small.
+1. Prefer publishing it as your own package (`awesome-agent-avatars-style-<name>`) and opening a PR to list it in the README. Built-in styles are kept few so the defaults stay small.
 2. Credit the art's creator in `credit` and in your README, and only use art you may redistribute.
 3. Check it on the sheets: `npm run dev`, then open `/playground.html#matrix=Lifecycle`, `#faces`, `#worn`, `#react` and `#arms` with your style added to `site/src/shared.ts`.
 

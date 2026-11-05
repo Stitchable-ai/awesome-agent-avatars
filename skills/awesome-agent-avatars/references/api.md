@@ -1,6 +1,6 @@
 # API summary
 
-## `bot-styles` (core, no dependencies)
+## `awesome-agent-avatars` (core, no dependencies)
 
 | Export | |
 |---|---|
@@ -12,16 +12,16 @@
 | `PROPS`, `registerProp(id, def)` | app-drawn props. |
 | `defineStyle(style)`, `pictureStyle(cfg)` | write a style. |
 | `randomOptions`, `normalizeOptions`, `createStyleRegistry`, `groupFields` | the editing interface. |
-| `injectStyles(doc?)`, `stylesheet` | CSS (also `bot-styles/styles.css`). |
+| `injectStyles(doc?)`, `stylesheet` | CSS (also `awesome-agent-avatars/styles.css`). |
 
 ## `BotAvatar`
 
 `state`, `setState(id, { quiet? })`, `react(name, seconds?)`, `poke("spin" | "bounce" | "nod" | "wiggle" | "shake" | "jolt", { turns? })`, `look("left" | "right" | "up" | "down" | "center", seconds?)`, `moment(face, seconds?)`, `holdFace(face | null)`, `setPointer(x, y, weight)`, `grab(x, y)`, `dragTo(x, y)`, `release()`, `attend()`, `setGlow(on)`, `setReducedMotion(on)`, `setArt(art)` (hot-swap, keeps the state), `flash(prop, seconds?)`, `simulate(seconds)`, `destroy()`.
 
-## `bot-styles/react`
+## `awesome-agent-avatars/react`
 
 `<AgentAvatar art state? glow? size? className? style? onStateChange? …createAvatar options />` (ref → `BotAvatar`), `useStyleArt(style, options?)`, `useRecipeArt(registry, recipe)`.
 
 ## Styles
 
-`bot-styles/styles/micah`, `/avataaars`, `/gaze` (peer: `@dicebear/core`, `@dicebear/styles`), `/nice` (peer: `react`, `react-dom`, `react-nice-avatar`), `/fluent` (`fluentStyle({ baseUrl })` to self-host). Adapter: `bot-styles/dicebear` → `dicebearStyle`, `variantField`, `colorField`, `creditOf`.
+`awesome-agent-avatars/styles/micah`, `/avataaars`, `/gaze` (peer: `@dicebear/core`, `@dicebear/styles`), `/nice` (peer: `react`, `react-dom`, `react-nice-avatar`), `/fluent` (`fluentStyle({ baseUrl })` to self-host). Adapter: `awesome-agent-avatars/dicebear` → `dicebearStyle`, `variantField`, `colorField`, `creditOf`.

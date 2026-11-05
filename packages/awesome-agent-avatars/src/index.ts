@@ -1,6 +1,6 @@
-// bot-styles: one motion engine for AI agent avatars, any art style.
+// awesome-agent-avatars: one motion engine for AI agent avatars, any art style.
 // Core has no dependencies. Styles and framework bindings are separate entry points:
-//   bot-styles/react · bot-styles/dicebear · bot-styles/styles/{micah,avataaars,gaze,nice,fluent}
+//   awesome-agent-avatars/react · awesome-agent-avatars/dicebear · awesome-agent-avatars/styles/{micah,avataaars,gaze,nice,fluent}
 export { createAvatar, injectStyles, REACTIONS, POKES, LOOK, FACES, FACE_FALLBACK } from "./engine";
 export { defaultMotion, extendMotion, GROUPS } from "./motion";
 export { PROPS, registerProp } from "./props";
