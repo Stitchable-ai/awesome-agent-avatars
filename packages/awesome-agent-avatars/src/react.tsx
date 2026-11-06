@@ -3,14 +3,14 @@
 // The engine only starts in an effect, so server rendering outputs an empty, sized box.
 import { createElement, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { createAvatar } from "./engine";
-import type { AvatarOptions, AvatarRecipe, AvatarStyle, BotAvatar, StateName, StyleArt, StyleOptions } from "./types";
+import { createAvatar } from "./engine.js";
+import type { AnyStateName, AvatarOptions, AvatarRecipe, AvatarStyle, BotAvatar, StyleArt, StyleOptions } from "./types.js";
 
 export interface AgentAvatarProps extends Omit<AvatarOptions, "state" | "onState"> {
   /** art from a style's render(), or from useStyleArt() */
   art: StyleArt | null | undefined;
   /** controlled state; change it to move the avatar */
-  state?: StateName | (string & {});
+  state?: AnyStateName;
   glow?: boolean;
   /** width (the stage is square) */
   size?: number | string;
@@ -34,6 +34,9 @@ export const AgentAvatar = forwardRef<BotAvatar | null, AgentAvatarProps>(functi
   }, [art]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => { av.current?.destroy(); av.current = null; }, []);
   useEffect(() => { if (state && av.current && av.current.state !== state) av.current.setState(state); }, [state]);
+  // worn props are identity: a recipe's `wear` changes without a remount (a host re-dressing on file change)
+  const wearKey = (opts.wear || []).join(",");
+  useEffect(() => { if (av.current && av.current.wear.join(",") !== wearKey) av.current.setWear(wearKey ? wearKey.split(",") : []); }, [wearKey]);
   useEffect(() => { av.current?.setGlow(!!glow); }, [glow, av.current]);
   useImperativeHandle(ref, () => av.current as BotAvatar, [av.current]);
 

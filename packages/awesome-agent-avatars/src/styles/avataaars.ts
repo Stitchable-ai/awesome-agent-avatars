@@ -1,8 +1,9 @@
 // Avataaars by Pablo Stanley (free for personal and commercial use), via DiceBear.
-import definition from "@dicebear/styles/avataaars.json";
-import { colorField, dicebearStyle, variantField } from "../dicebear";
+import definition from "@dicebear/styles/avataaars.json" with { type: "json" };
+import { colorField, dicebearStyle, variantField } from "../dicebear.js";
+import type { DicebearDefinition } from "../dicebear.js";
 
-const def = definition as any;
+const def: DicebearDefinition = definition;
 const SKIN = ["#ffdbb4", "#edb98a", "#d08b5b", "#ae5d29", "#8d5524", "#614335"];
 
 export const avataaars = dicebearStyle({
@@ -13,16 +14,17 @@ export const avataaars = dicebearStyle({
   sleeveKey: "clothesColor",
   fields: [
     colorField(def, "skin", "Skin", { extra: SKIN, group: "Face" }),
-    variantField(def, "top", "Hair / headwear", { optional: true, group: "Hair" }),
+    variantField(def, "top", "Hair / headwear", { optional: true, group: "Hair", tags: { hat: ["hat", "cap", "fedora"], hijab: ["hijab", "covered", "scarf"], turban: ["turban", "covered"], winterHat1: ["beanie", "winter hat", "knit"], winterHat02: ["beanie", "winter hat", "pompom"], winterHat03: ["beanie", "winter hat", "ear flaps"], winterHat04: ["beanie", "winter hat", "cat ears"], eyepatch: ["eyepatch", "pirate"], frizzle: ["short", "frizzy", "curly"], shaggy: ["short", "shaggy", "messy"], shaggyMullet: ["mullet", "shaggy"], shortCurly: ["short", "curly"], shortFlat: ["short", "flat"], shortRound: ["short", "round"], shortWaved: ["short", "waved"], sides: ["bald", "sides", "receding"], theCaesar: ["short", "caesar", "cropped"], theCaesarAndSidePart: ["short", "side part"], bigHair: ["long", "big", "voluminous"], bob: ["bob", "short", "medium"], bun: ["bun", "updo"], curly: ["long", "curly"], curvy: ["long", "curvy", "wavy"], dreads: ["dreads", "locs"], frida: ["updo", "flowers", "braids"], fro: ["afro", "fro"], froBand: ["afro", "headband"], longButNotTooLong: ["medium", "long"], miaWallace: ["bob", "bangs", "straight"], shavedSides: ["shaved sides", "undercut"], straight01: ["long", "straight"], straight02: ["long", "straight", "parted"], straightAndStrand: ["long", "straight", "strand"], dreads01: ["dreads", "short"], dreads02: ["dreads", "medium"] } }),
     colorField(def, "hair", "Hair colour", { group: "Hair" }),
     colorField(def, "hat", "Headwear colour", { extra: ["#5b6ee1"], group: "Hair" }),
-    variantField(def, "accessories", "Glasses", { optional: true, group: "Face" }),
+    variantField(def, "accessories", "Glasses", { optional: true, group: "Face", tags: { kurt: ["sunglasses", "round", "tinted"], prescription01: ["glasses", "square"], prescription02: ["glasses", "rectangle"], round: ["glasses", "round"], sunglasses: ["sunglasses", "dark"], wayfarers: ["sunglasses", "wayfarer"], eyepatch: ["eyepatch"] } }),
     variantField(def, "facialHair", "Facial hair", { optional: true, group: "Face" }),
     colorField(def, "facialHair", "Facial hair colour", { group: "Face" }),
     variantField(def, "clothes", "Clothes", { group: "Clothes" }),
     colorField(def, "clothes", "Clothes colour", { extra: ["#262e33"], group: "Clothes" }),
   ],
   defaults: (seed = "Zara") => ({ seed, skinColor: "#ae5d29", topVariant: "hijab", hairColor: "#2c1b18", hatColor: "#5b6ee1", accessoriesVariant: "none", facialHairVariant: "none", facialHairColor: "#2c1b18", clothesVariant: "blazerAndShirt", clothesColor: "#262e33" }),
+  traits: { skin: "skinColor", hairStyle: "topVariant", hat: "topVariant", hairColor: "hairColor", hatColor: "hatColor", glasses: "accessoriesVariant", facialHair: "facialHairVariant", topStyle: "clothesVariant", topColor: "clothesColor" },
   faces: {
     neutral: { eyesVariant: "default", mouthVariant: "default", eyebrowsVariant: "defaultNatural" },
     talk: { eyesVariant: "default", mouthVariant: "smile", eyebrowsVariant: "defaultNatural" },

@@ -3,16 +3,25 @@
 // forked), which gives the engine addressable eyes, brows and mouth in any DiceBear style.
 // Peer dependency: @dicebear/core (and @dicebear/styles for the presets).
 import { Avatar, Style } from "@dicebear/core";
-import type { AvatarStyle, Credit, FaceName, Field, StyleArt, StyleOptions } from "./types";
+import type { StyleDefinition } from "@dicebear/core";
+import type { AvatarStyle, Credit, FaceName, Field, StyleArt, StyleOptions, TraitMap } from "./types.js";
 
-type Definition = { meta?: any; components: Record<string, { variants: Record<string, unknown>; probability?: number }>; colors?: Record<string, { values: string[] }> } & Record<string, any>;
+/** What this adapter reads from a DiceBear style definition (`@dicebear/styles/<name>.json`). */
+export interface DicebearDefinition {
+  meta?: { creator?: { name?: string; url?: string }; source?: { name?: string; url?: string }; license?: { name?: string; url?: string } };
+  components: Record<string, { variants: Record<string, unknown>; probability?: number }>;
+  colors?: Record<string, { values: string[] }>;
+  [key: string]: unknown;
+}
+type Definition = DicebearDefinition;
 
-function tag(node: any): any {
+function tag(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(tag);
   if (!node || typeof node !== "object") return node;
-  if (node.type === "component" && typeof node.name === "string") return { name: "g", type: "element", attributes: { class: `aav-part-${node.name}` }, children: [{ ...node }] };
-  const out: any = {};
-  for (const [k, v] of Object.entries(node)) out[k] = k === "attributes" ? v : tag(v);
+  const n = node as Record<string, unknown>;
+  if (n.type === "component" && typeof n.name === "string") return { name: "g", type: "element", attributes: { class: `aav-part-${n.name}` }, children: [{ ...n }] };
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(n)) out[k] = k === "attributes" ? v : tag(v);
   return out;
 }
 
@@ -25,9 +34,11 @@ export function creditOf(def: Definition): Credit {
 }
 
 /** A select field from a component's variants. `optional` adds "None" (probability 0). */
-export function variantField(def: Definition, component: string, label: string, o: { optional?: boolean; group?: string; only?: string[] } = {}): Field {
+export function variantField(def: Definition, component: string, label: string, o: { optional?: boolean; group?: string; only?: string[]; tags?: Record<string, string[]> } = {}): Field {
   const names = Object.keys(def.components[component]?.variants || {}).filter((v) => !o.only || o.only.includes(v));
-  return { key: `${component}Variant`, label, type: "select", group: o.group, options: [...(o.optional ? [{ value: "none", label: "None" }] : []), ...names.map((v) => ({ value: v, label: words(v) }))] };
+  // plain words an agent can match: the name's words (longHairCurly → long, hair, curly), or hand-written ones for opaque names
+  const tagsOf = (v: string) => o.tags?.[v] || words(v).toLowerCase().replace(/([a-z])([0-9])/g, "$1 $2").split(/\s+/).filter(Boolean);
+  return { key: `${component}Variant`, label, type: "select", group: o.group, options: [...(o.optional ? [{ value: "none", label: "None", tags: ["none"] }] : []), ...names.map((v) => ({ value: v, label: words(v), tags: tagsOf(v) }))] };
 }
 /** A colour field from a palette in the definition, plus extra swatches. */
 export function colorField(def: Definition, color: string, label: string, o: { extra?: string[]; group?: string } = {}): Field {
@@ -48,13 +59,15 @@ export interface DicebearPreset<O extends StyleOptions> {
   /** which option holds skin / sleeve colour (for app-drawn hands) */
   skinKey?: string;
   sleeveKey?: string;
+  /** cross-style traits → this style's field keys */
+  traits?: TraitMap;
   art?: Omit<StyleArt, "id" | "tier" | "faces">;
 }
 
 /** Turn a DiceBear definition into an editable awesome-agent-avatars style. */
 export function dicebearStyle<O extends StyleOptions>(p: DicebearPreset<O>): AvatarStyle<O> {
-  let tagged: InstanceType<typeof Style> | null = null;
-  const style = () => (tagged ??= new Style(tag(p.definition)));
+  let tagged: Style<StyleDefinition> | null = null;
+  const style = () => (tagged ??= new Style(tag(p.definition) as StyleDefinition));
   const toDicebear = (options: StyleOptions) => {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(options)) {
@@ -65,11 +78,11 @@ export function dicebearStyle<O extends StyleOptions>(p: DicebearPreset<O>): Ava
     return out;
   };
   return {
-    id: p.id, name: p.name, tier: "parts", credit: creditOf(p.definition), fields: p.fields, defaults: p.defaults,
+    id: p.id, name: p.name, tier: "parts", credit: creditOf(p.definition), fields: p.fields, defaults: p.defaults, traits: p.traits,
     render(options) {
       const common = { ...(p.base || {}), ...toDicebear(options) };
       const faces: Record<string, string> = {};
-      for (const [face, fo] of Object.entries(p.faces)) faces[face] = new Avatar(style(), { ...common, ...fo } as any).toString().replace(/<metadata[\s\S]*?<\/metadata>/, "");
+      for (const [face, fo] of Object.entries(p.faces)) faces[face] = new Avatar(style(), { ...common, ...fo }).toString().replace(/<metadata[\s\S]*?<\/metadata>/, "");
       return {
         id: p.id, tier: "parts", faces: faces as StyleArt["faces"],
         skin: p.skinKey ? String(options[p.skinKey] ?? "") || undefined : undefined,

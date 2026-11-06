@@ -2,11 +2,12 @@
 // is which part by rendering two looks that differ in one part and comparing them.
 // Peer dependencies: react, react-dom, react-nice-avatar. Renders in the browser.
 import { createElement } from "react";
+import type { ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 import NiceAvatar from "react-nice-avatar";
-import type { FaceName, StyleArt } from "../types";
-import { defineStyle } from "../style";
+import type { FaceName, StyleArt } from "../types.js";
+import { defineStyle } from "../style.js";
 
 type Opts = { sex: string; faceColor: string; earSize: string; hairStyle: string; hairColor: string; hatStyle: string; hatColor: string; eyeBrowStyle: string; glassesStyle: string; noseStyle: string; shirtStyle: string; shirtColor: string };
 const sel = (key: string, label: string, values: string[], group: string) => ({ key, label, type: "select" as const, group, options: values.map((v) => ({ value: v, label: v.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase()) })) });
@@ -14,7 +15,8 @@ const col = (key: string, label: string, swatches: string[], group: string) => (
 
 function render(config: Record<string, unknown>): string {
   const host = document.createElement("div"), root = createRoot(host);
-  flushSync(() => root.render(createElement(NiceAvatar as any, { style: { width: "100%", height: "100%" }, shape: "square", bgColor: "transparent", ...config })));
+  // the component's props are its typed config; we pass a loose bag of probes, so widen the component rather than the bag
+  flushSync(() => root.render(createElement(NiceAvatar as unknown as ComponentType<Record<string, unknown>>, { style: { width: "100%", height: "100%" }, shape: "square", bgColor: "transparent", ...config })));
   const html = host.innerHTML; root.unmount(); return html;
 }
 const chunks = (m: string) => m.match(/<svg[\s\S]*?<\/svg>/g) || [];
@@ -49,6 +51,7 @@ export const nice = defineStyle<Opts>({
   name: "Nice Avatar",
   tier: "parts",
   credit: { author: "Dapi", authorUrl: "https://github.com/dapi-labs", source: "react-nice-avatar", sourceUrl: "https://github.com/dapi-labs/react-nice-avatar", license: "MIT", licenseUrl: "https://github.com/dapi-labs/react-nice-avatar/blob/main/LICENSE" },
+  traits: { skin: "faceColor", hairStyle: "hairStyle", hairColor: "hairColor", hat: "hatStyle", hatColor: "hatColor", glasses: "glassesStyle", topStyle: "shirtStyle", topColor: "shirtColor" },
   fields: [
     sel("sex", "Body", ["woman", "man"], "Face"),
     col("faceColor", "Skin", ["#F9C9B6", "#E8B796", "#D39972", "#AC6651", "#8D5524", "#5C3A21"], "Face"),

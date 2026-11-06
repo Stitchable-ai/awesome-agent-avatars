@@ -1,0 +1,43 @@
+# Publishes packages/awesome-agent-avatars to npm when a version tag is pushed.
+#
+#   npm version patch --workspace awesome-agent-avatars --no-git-tag-version
+#   git commit -am "awesome-agent-avatars 0.1.1" && git tag v0.1.1 && git push --follow-tags
+#
+# Authentication is npm trusted publishing (OIDC): no token is stored in GitHub. It is set up
+# once, after the first manual publish, under the package's Settings → Trusted publisher on
+# npmjs.com (GitHub Actions · Stitchable-ai/awesome-agent-avatars · release.yml). Until then
+# this job fails at `npm publish` with ENEEDAUTH, which is the expected state.
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    environment: npm
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      # trusted publishing needs npm 11.5.1 or newer
+      - run: npm install -g npm@latest && npm -v
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run check:pack
+      - name: The tag names the package version
+        run: |
+          version="$(node -p "require('./packages/awesome-agent-avatars/package.json').version")"
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME is not v$version"; exit 1; }
+      - run: npm publish --provenance --access public
+        working-directory: packages/awesome-agent-avatars

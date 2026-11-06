@@ -66,6 +66,19 @@ Every style exposes `fields`, `defaults()` and `render(options)`. Build the edit
 
 Any image: `pictureStyle({ id, name, src, credit })`. Any DiceBear style: `dicebearStyle({ definition, fields, defaults, faces, art })` from `awesome-agent-avatars/dicebear`. From scratch: return SVG strings whose parts carry `class="aav-part-eyes"`, `aav-part-mouth`, etc. See [references/styles.md](references/styles.md) and [references/motion.md](references/motion.md) for custom states and clips.
 
+## 7. Let the agent edit its own avatar, and make new styles
+
+When the agent itself should change its look from a chat ("blue hair, a hat, no glasses, red clothes"), keep its recipe as a file (`avatar.json`) and use the `aav` CLI that ships with the package. Run it as `npx --no-install aav` in a project that has `awesome-agent-avatars` installed: a bare `npx aav` in a non-interactive shell installs and runs whatever npm package is named `aav` without asking.
+
+```sh
+npx --no-install aav describe avatar.json                     # what this style can change, what it cannot
+npx --no-install aav edit avatar.json --trait hairColor=blue --trait hat="a hat" --trait glasses=none --trait topColor=red --wear "a hat"
+npx --no-install aav switch avatar.json avataaars             # when the person accepts a style that has what was missing
+npx --no-install aav render avatar.json -o /tmp/still.svg     # look before you report
+```
+
+Tell the person what changed, what this style cannot do, and the way through (`wear` a prop, or a style switch offered as a choice). For a new style, scaffold a data style first (`aav style new <dir> --derive <style>` or `--compose <style>`), lint it (`aav lint`), and render it before registering. Write code (`--module`) only when data cannot express the look. The app must make the recipe file the avatar's source of truth and keep the look out of the system prompt. Full guide: [references/authoring.md](references/authoring.md).
+
 ## Rules
 
 - Keep the art's credit visible where the app lists credits/licences (Micah is CC BY 4.0: attribution is required). Never copy third-party art into the repo; import it from the npm packages.
@@ -73,5 +86,6 @@ Any image: `pictureStyle({ id, name, src, credit })`. Any DiceBear style: `diceb
 - Under a strict CSP (`style-src` without `'unsafe-inline'`), pass `injectStyles: false` and import `awesome-agent-avatars/styles.css`.
 - Respect reduced motion (default) and do not drive states from timers when real events exist.
 - Verify in the running app: the avatar renders, follows the pointer on hover, and changes state during a real agent turn. Report anything you could not check.
+- Never describe the avatar's look from memory or put it in a system prompt; read it with `aav describe`. Never report an edit as done without the `applied` list, and always pass on what was `rejected`.
 
 API summary: [references/api.md](references/api.md). Framework notes: [references/frameworks.md](references/frameworks.md).

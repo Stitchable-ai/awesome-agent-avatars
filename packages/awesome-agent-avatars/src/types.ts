@@ -2,6 +2,7 @@
 //   StyleArt     – what a style hands the engine (art + a few hints)
 //   AvatarStyle  – an editable style: fields for an editor, defaults, render(options) -> StyleArt
 //   MotionPack   – states and keyframe clips (plain data)
+import type { STATE_NAMES } from "./motion.js";
 
 /** Face names every style is asked for. A style may omit any but `neutral`; the engine falls back. */
 export type FaceName =
@@ -71,8 +72,10 @@ export interface Credit {
 }
 
 /** An editor field. Values are plain JSON so a recipe can be saved anywhere. */
+/** A select option. `tags` are plain words an agent or a search box can match ("short", "curly", "hat"). */
+export interface FieldOption { value: string; label: string; tags?: string[] }
 export type Field =
-  | { key: string; label: string; type: "select"; options: { value: string; label: string }[]; group?: string }
+  | { key: string; label: string; type: "select"; options: FieldOption[]; group?: string }
   | { key: string; label: string; type: "color"; swatches: string[]; group?: string }
   | { key: string; label: string; type: "toggle"; group?: string }
   | { key: string; label: string; type: "text"; placeholder?: string; group?: string };
@@ -89,13 +92,31 @@ export interface AvatarStyle<O extends StyleOptions = StyleOptions> {
   fields: Field[];
   defaults(seed?: string): O;
   render(options: O): StyleArt | Promise<StyleArt>;
+  /** Which field carries each cross-style trait (see `TRAITS`); a trait left out is one the style cannot express. */
+  traits?: TraitMap;
+  /** Where this style came from, for styles made by composing or deriving others. */
+  provenance?: { kind: "derive" | "compose" | "module"; from: string[]; by?: string; at?: string };
 }
 
+/** The cross-style vocabulary: what "hair colour" or "a hat" means in any style. */
+export type TraitName =
+  | "skin" | "hairStyle" | "hairColor" | "facialHair" | "glasses" | "hat" | "hatColor"
+  | "topStyle" | "topColor" | "eyeColor" | "earrings" | "shape" | "bodyColor";
+export type TraitMap = Partial<Record<TraitName, string>>;
+
 /** A saved avatar: which style and which options. Store it anywhere (JSON). */
-export interface AvatarRecipe { v: 1; style: string; options: StyleOptions; name?: string }
+export interface AvatarRecipe {
+  v: 1;
+  style: string;
+  options: StyleOptions;
+  name?: string;
+  /** worn props drawn on the avatar in every state: "cap", "beanie", "hat", "headphones", "bow", "cape", "crystal" */
+  wear?: string[];
+}
 
 // ---------------- motion ----------------
 export type Ease = "io" | "in" | "out" | "lin" | [number, number, number, number];
+/** A keyframe: [time, value] or [time, value, ease into this key]. */
 export type Key<V> = [number, V] | [number, V, Ease];
 export interface Pose { x: number; y: number; pitch: number; yaw: number; roll: number; sx: number; sy: number; zoom: number; gx: number; gy: number; lid: number }
 export interface Clip {
@@ -108,7 +129,7 @@ export interface Clip {
     gaze?: Key<[number, number]>[];
     lid?: Key<number>[];
     /** face changes; "blink" triggers a blink; null returns to the state's face */
-    face?: [number, string | null][];
+    face?: [number, FaceName | "blink" | null][];
   };
   /** procedural layer: x/y/pitch/yaw/roll/gx/gy/lid add, sx/sy/zoom multiply */
   fn?: (t: number, avatar: { cursorAt(t: number): { x: number; y: number } }) => Partial<Pose>;
@@ -120,6 +141,7 @@ export interface Clip {
   end?: "hold";
 }
 export type PokeName = "spin" | "bounce" | "hop" | "nod" | "wiggle" | "shake" | "jolt";
+export interface PokeParams { turns?: number }
 export interface StateRecipe {
   group: string;
   clips: string[];
@@ -133,7 +155,7 @@ export interface StateRecipe {
   /** hand-off: after `hold` seconds, or after the clips play once when `hold` is omitted */
   next?: string;
   hold?: number;
-  pokes?: (PokeName | [PokeName, { turns?: number }])[];
+  pokes?: (PokeName | [PokeName, PokeParams])[];
   dim?: "sleep" | "off";
   /** pointer-follow weight (0 disables) */
   follow?: number;
@@ -148,22 +170,28 @@ export interface StateRecipe {
 }
 export interface MotionPack { clips: Record<string, Clip>; states: Record<string, StateRecipe>; groups: string[] }
 
-export type StateName =
-  | "idle" | "listening" | "thinking" | "streaming" | "searching" | "reading" | "working" | "coding" | "running"
-  | "computing" | "controlling" | "waiting" | "blocked" | "finished" | "failed" | "sleeping" | "waking" | "unavailable"
-  | "happy" | "excited" | "laughing" | "proud" | "curious" | "playful" | "shy" | "surprised" | "suspicious" | "angry"
-  | "confused" | "sad" | "drowsy" | "bored" | "scared" | "celebrate" | "approving"
-  | "orbit" | "radar" | "progress" | "spawning" | "loading" | "dictating" | "sending" | "receiving" | "uploading"
-  | "writing" | "alerting" | "bouncing" | "powering-down"
-  | "waving" | "making" | "delegating" | "milestone" | "humming" | "notifying" | "dragging"
-  | "intro" | "showcase" | "turntable";
+/** The states in the default motion pack (`STATE_NAMES`). */
+export type BuiltinStateName = (typeof STATE_NAMES)[number];
+/**
+ * Your own state names, for autocomplete. Add them with module augmentation:
+ *
+ *   declare module "awesome-agent-avatars" { interface CustomStateNames { party: true } }
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface CustomStateNames {}
+/** A known state: built in, or added to `CustomStateNames`. */
+export type StateName = BuiltinStateName | Extract<keyof CustomStateNames, string>;
+/** What the state setters accept: known names autocomplete, and any string is allowed because a motion pack is data. */
+export type AnyStateName = StateName | (string & {});
 
 export type ReactionName = "happy" | "laughing" | "surprised" | "sad" | "angry" | "confused" | "scared" | "wink" | "love" | "sleepy" | "shy";
+/** What `react()` accepts: a reaction, or a face name to show as a plain moment. */
+export type AnyReactionName = ReactionName | FaceName | (string & {});
 export type LookDirection = "left" | "right" | "up" | "down" | "center";
 
 export interface AvatarOptions {
   /** initial state (default "idle") */
-  state?: StateName | (string & {});
+  state?: AnyStateName;
   /** seed for the per-avatar randomness (clip order, blinks, glances) */
   seed?: string;
   motion?: MotionPack;
@@ -180,6 +208,8 @@ export interface AvatarOptions {
   injectStyles?: boolean;
   /** render one frame and never animate (thumbnails, screenshots) */
   static?: boolean;
+  /** props worn in every state (a recipe's `wear`); states add their own on top */
+  wear?: string[];
   onState?: (state: string) => void;
 }
 export interface InteractionOptions {
@@ -198,9 +228,9 @@ export interface InteractionOptions {
 export interface BotAvatar {
   readonly root: HTMLElement;
   readonly state: string;
-  setState(state: StateName | (string & {}), opts?: { quiet?: boolean }): void;
-  react(reaction: ReactionName | (string & {}), seconds?: number): void;
-  poke(name: PokeName, params?: { turns?: number }): void;
+  setState(state: AnyStateName, opts?: { quiet?: boolean }): void;
+  react(reaction: AnyReactionName, seconds?: number): void;
+  poke(name: PokeName, params?: PokeParams): void;
   look(direction: LookDirection, seconds?: number): void;
   /** show a face for a while without motion */
   moment(face: FaceName, seconds?: number): void;
@@ -219,6 +249,9 @@ export interface BotAvatar {
   setArt(art: StyleArt): void;
   /** show a prop for a while */
   flash(prop: string, seconds?: number): void;
+  /** props worn in every state (identity, not mood); replaces the current list */
+  setWear(props: string[]): void;
+  readonly wear: readonly string[];
   /** advance by hand (tests, thumbnails) */
   simulate(seconds: number): void;
   destroy(): void;

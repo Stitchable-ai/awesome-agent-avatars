@@ -103,6 +103,24 @@ agent.on("error", () => bot.error());
 | **Interactions** | Eyes, then head, follow the pointer (parallax makes flat art feel 2.5D). Click to hop, double-click to spin, drag to make it dangle and swing, rub to make it blush, click five times to annoy it. Leave it alone and it gets bored, then sleeps; hover wakes it with a stretch. |
 | **Props** | Laptop and headphones, thought dots, radar, terminal, a cursor its eyes follow, party hat and confetti, a cape, a glowing crystal, little helper copies of itself, and more. Drawn by the app, so every style gets them. Register your own. |
 | **Courtesy** | One `requestAnimationFrame` loop for all avatars; stops off screen and in hidden tabs; `prefers-reduced-motion` gives a still pose; under 56 px it plays gentle clips and shows badges only. |
+| **Authoring** | `awesome-agent-avatars/author` and the `aav` CLI. An agent describes and edits its own recipe through cross-style traits, and edits report what applied, what could not and which style could. Worn props (cap, beanie, headphones…) work on any style. New styles by deriving (a gradient Gaze), composing (Avataaars hats on Micah) or code, with a lint and a sanitizer. |
+| **TypeScript** | Written in strict TypeScript; every entry ships declarations, checked under NodeNext and bundler resolution. States, reactions, pokes, faces and look directions are closed types (`StateName`, `ReactionName`, `PokeName`, `FaceName`, `LookDirection`), so they autocomplete and typos fail to compile. Setters still take any string, because a motion pack is data; name your own states in `CustomStateNames` to get them in autocomplete too. |
+
+## Let your agent edit its own look
+
+Your agent is asked, in a chat, "can you have blue hair, a hat, no glasses and red clothes?". It should manage that as well as a person in an editor. It should also say what its style cannot do and offer a way through. And because it codes, it can make styles nobody drew.
+
+```sh
+npx -p awesome-agent-avatars aav edit avatar.json --trait hairColor=blue --trait hat="a hat" --trait glasses=none --trait topColor=red --wear "a hat"
+✓ Hair colour → #3b82f6   ✓ Glasses → None   ✓ Top colour → #dc2626   ✓ wearing cap
+✗ hat: Micah cannot change hat … try: wear: cap · → switch to Avataaars for hat: aav switch avatar.json avataaars
+
+npx -p awesome-agent-avatars aav style new styles/brand --derive gaze     # Gaze in your brand gradient: a data file, no code
+npx -p awesome-agent-avatars aav style new styles/hats  --compose micah   # Avataaars hats on Micah, placed head to head
+npx -p awesome-agent-avatars aav lint styles/brand                        # refuses scripts, external refs, a missing credit
+```
+
+`aav` is the CLI inside the `awesome-agent-avatars` package, so name the package (`npx -p awesome-agent-avatars`, or `npx --no-install aav` once it is installed): a bare `npx aav` fetches whatever npm package is called `aav`. The recipe is a file (`avatar.json`), so any agent with a shell can edit it and any host can watch it. The same functions ship as `awesome-agent-avatars/author` for editors and tool layers. Showing an avatar still needs nothing but the browser. Guide: [docs/authoring.md](docs/authoring.md).
 
 ## Styles
 
@@ -110,12 +128,13 @@ Each style is its own import, so you only ship what you use. The art libraries a
 
 | Import | Art | Licence | Gzipped |
 |---|---|---|---|
-| `awesome-agent-avatars/styles/micah` | [Micah](https://www.figma.com/community/file/829741575478342595) by Micah Lanier, via DiceBear | CC BY 4.0 (attribution required) | 9.3 KB + DiceBear core 24.9 KB |
-| `awesome-agent-avatars/styles/avataaars` | [Avataaars](https://avataaars.com/) by Pablo Stanley, via DiceBear | Free for personal and commercial use | 41.7 KB + DiceBear core |
+| `awesome-agent-avatars/styles/micah` | [Micah](https://www.figma.com/community/file/829741575478342595) by Micah Lanier, via DiceBear | CC BY 4.0 (attribution required) | 9.7 KB + DiceBear core 24.9 KB |
+| `awesome-agent-avatars/styles/avataaars` | [Avataaars](https://avataaars.com/) by Pablo Stanley, via DiceBear | Free for personal and commercial use | 42.4 KB + DiceBear core |
 | `awesome-agent-avatars/styles/gaze` | [Gaze](https://www.dicebear.com) by DiceBear | CC0 1.0 | 3.6 KB + DiceBear core |
-| `awesome-agent-avatars/styles/nice` | [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) by Dapi | MIT | 34.6 KB (+ your React) |
-| `awesome-agent-avatars/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) heads and hands by Microsoft | MIT | 1.5 KB (images from a pinned CDN commit, or self-host) |
-| `awesome-agent-avatars` | the engine: motion, props, CSS | MIT | **23.7 KB**, no dependencies |
+| `awesome-agent-avatars/styles/nice` | [react-nice-avatar](https://github.com/dapi-labs/react-nice-avatar) by Dapi | MIT | 34.7 KB (+ your React) |
+| `awesome-agent-avatars/styles/fluent` | [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) heads and hands by Microsoft | MIT | 1.3 KB (images from a pinned CDN commit, or self-host) |
+| `awesome-agent-avatars` | the engine: motion, props, CSS | MIT | **24.1 KB**, no dependencies |
+| `awesome-agent-avatars/author` | describe, edit, traits, new styles, lint (for agents and editors; also the `aav` CLI) | MIT | 7.6 KB, loaded only by editors and tools |
 | `awesome-agent-avatars/react` | React bindings | MIT | +0.3 KB |
 
 ### Bring your own style

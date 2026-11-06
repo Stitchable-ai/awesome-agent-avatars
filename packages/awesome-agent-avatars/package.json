@@ -9,14 +9,22 @@
   ],
   "files": [
     "dist",
+    "bin",
+    "schema",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"
   ],
+  "main": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./author": {
+      "types": "./dist/types/author.d.ts",
+      "import": "./dist/author.js"
     },
     "./react": {
       "types": "./dist/types/react.d.ts",
@@ -47,7 +55,27 @@
       "import": "./dist/styles/fluent.js"
     },
     "./styles.css": "./dist/styles.css",
+    "./schema/avatar.schema.json": "./schema/avatar.schema.json",
     "./package.json": "./package.json"
+  },
+  "bin": {
+    "aav": "./bin/aav.mjs"
+  },
+  "typesVersions": {
+    "*": {
+      "author": [
+        "./dist/types/author.d.ts"
+      ],
+      "react": [
+        "./dist/types/react.d.ts"
+      ],
+      "dicebear": [
+        "./dist/types/dicebear.d.ts"
+      ],
+      "styles/*": [
+        "./dist/types/styles/*.d.ts"
+      ]
+    }
   },
   "scripts": {
     "build": "node build.mjs",
@@ -77,6 +105,9 @@
       "optional": true
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "ai-agent",
     "avatar",
@@ -91,8 +122,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Stitchable-ai/awesome-agent-avatars.git",
+    "url": "git+https://github.com/Stitchable-ai/awesome-agent-avatars.git",
     "directory": "packages/awesome-agent-avatars"
   },
-  "homepage": "https://awesome-agent-avatars.stitchable.ai"
+  "homepage": "https://awesome-agent-avatars.stitchable.ai",
+  "bugs": {
+    "url": "https://github.com/Stitchable-ai/awesome-agent-avatars/issues"
+  }
 }

@@ -3,8 +3,8 @@
 // Fluent's own 3D hand emoji (✋ to ask, 👋 to wave), floating beside the head the way Fluent's
 // own smileys (🤗 🫡 🤭) hold theirs. No art ships in this package: images load from a pinned
 // commit on jsDelivr by default; pass your own baseUrl to self-host.
-import { pictureStyle } from "../style";
-import type { AvatarStyle } from "../types";
+import { pictureStyle } from "../style.js";
+import type { AvatarStyle } from "../types.js";
 
 const PIN = "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc";
 export const FLUENT_CDN = `https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@${PIN}/assets`;
@@ -34,6 +34,7 @@ export function fluentStyle(o: { baseUrl?: string } = {}): AvatarStyle<{ charact
       { key: "character", label: "Character", type: "select", options: HEADS.map((n) => ({ value: n, label: n.replace(/^(Woman|Man|Person) /, "$1, ") })) },
       { key: "tone", label: "Skin tone", type: "select", options: TONES.map((t) => ({ value: t, label: t.replace("-", " ") })) },
     ],
+    traits: { skin: "tone", hairStyle: "character" },
     defaults: () => ({ character: "Woman", tone: "Default", src: "" }),
     render: async (opts) => {
       const tone = TONES.includes(opts.tone) ? opts.tone : "Default";

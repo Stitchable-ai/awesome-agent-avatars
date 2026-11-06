@@ -3,11 +3,11 @@
 //
 // Nothing here touches `window` or `document` at import time, so the module is
 // safe to import during server rendering (Next.js, Remix); create() needs a DOM.
-import { defaultMotion } from "./motion";
-import { PROPS } from "./props";
-import { stylesheet } from "./css";
-import { attachInteractions } from "./interactions";
-import type { AvatarOptions, BotAvatar, Clip, FaceName, LookDirection, MotionPack, PokeName, Pose, StyleArt } from "./types";
+import { defaultMotion } from "./motion.js";
+import { PROPS } from "./props.js";
+import { stylesheet } from "./css.js";
+import { attachInteractions } from "./interactions.js";
+import type { Anchors, AvatarOptions, BotAvatar, Clip, Ease, FaceName, Key, LookDirection, MotionPack, PokeName, PokeParams, Pose, ReactionName, StateRecipe, StyleArt } from "./types.js";
 
 const PI2 = Math.PI * 2, D2R = Math.PI / 180;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -19,9 +19,10 @@ function rng(seed: number) { let t = seed >>> 0; return () => { t = (t + 0x6d2b7
 function hash(s: string) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
 
 // ---- cubic-bezier eases ----
-const EASES: Record<string, number[]> = { io: [0.42, 0, 0.58, 1], out: [0.2, 0.7, 0.35, 1], in: [0.55, 0, 0.85, 0.45], lin: [0, 0, 1, 1] };
+type Bezier = [number, number, number, number];
+const EASES: Record<Exclude<Ease, Bezier>, Bezier> = { io: [0.42, 0, 0.58, 1], out: [0.2, 0.7, 0.35, 1], in: [0.55, 0, 0.85, 0.45], lin: [0, 0, 1, 1] };
 const bezCache = new Map<string, (u: number) => number>();
-function bez(e: string | number[]): (u: number) => number {
+function bez(e: Ease): (u: number) => number {
   const key = String(e); const hit = bezCache.get(key); if (hit) return hit;
   const [x1, y1, x2, y2] = typeof e === "string" ? EASES[e] || EASES.io : e;
   const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
@@ -36,53 +37,63 @@ function bez(e: string | number[]): (u: number) => number {
 }
 type V = number | number[];
 const mix = (a: V, b: V, k: number): V => (Array.isArray(a) ? a.map((v, i) => v + ((b as number[])[i] - v) * k) : a + ((b as number) - a) * k);
-function sample(keys: any[] | undefined, t: number): any {
+function sample<T extends V>(keys: Key<T>[] | undefined, t: number): T | undefined {
   if (!keys || !keys.length) return undefined;
   if (t <= keys[0][0]) return keys[0][1];
-  for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) { const [t0, v0] = keys[i - 1], [t1, v1, e] = keys[i]; return mix(v0, v1, bez(e || "io")((t - t0) / (t1 - t0 || 1))); }
+  for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) { const [t0, v0] = keys[i - 1], [t1, v1, e] = keys[i]; return mix(v0, v1, bez(e || "io")((t - t0) / (t1 - t0 || 1))) as T; }
   return keys[keys.length - 1][1];
 }
 
 const REST: Pose = { x: 0, y: 0, pitch: 0, yaw: 0, roll: 0, sx: 1, sy: 1, zoom: 1, gx: 0, gy: 0, lid: 0 };
-const MUL: Record<string, 1> = { sx: 1, sy: 1, zoom: 1 };
-function clipPose(clip: Clip, t: number, a: any): Pose {
-  const p: Pose = { ...REST }, tr = clip.tracks || {}; let v: any;
-  if ((v = sample(tr.pos, t))) { p.x = v[0]; p.y = v[1]; }
-  if ((v = sample(tr.rot, t))) { p.pitch = v[0]; p.yaw = v[1]; p.roll = v[2]; }
-  if ((v = sample(tr.sq, t))) { p.sx = v[0]; p.sy = v[1]; }
-  if ((v = sample(tr.zoom, t)) !== undefined) p.zoom = v;
-  if ((v = sample(tr.gaze, t))) { p.gx = v[0]; p.gy = v[1]; }
-  if ((v = sample(tr.lid, t)) !== undefined) p.lid = v;
-  if (clip.fn) { const f = clip.fn(t, a) as Record<string, number>; for (const k in f) (p as any)[k] = MUL[k] ? (p as any)[k] * f[k] : (p as any)[k] + f[k]; }
+const POSE_KEYS = Object.keys(REST) as (keyof Pose)[];
+const MUL = new Set<keyof Pose>(["sx", "sy", "zoom"]);
+type CursorSource = { cursorAt(t: number): { x: number; y: number } };
+/** Add a partial pose, scaled by `w`. */
+const addPose = (p: Pose, d: Partial<Pose>, w: number) => { for (const k of POSE_KEYS) { const v = d[k]; if (v !== undefined) p[k] += v * w; } };
+function clipPose(clip: Clip, t: number, a: CursorSource): Pose {
+  const p: Pose = { ...REST }, tr = clip.tracks || {};
+  const pos = sample(tr.pos, t); if (pos) { p.x = pos[0]; p.y = pos[1]; }
+  const rot = sample(tr.rot, t); if (rot) { p.pitch = rot[0]; p.yaw = rot[1]; p.roll = rot[2]; }
+  const sq = sample(tr.sq, t); if (sq) { p.sx = sq[0]; p.sy = sq[1]; }
+  const zoom = sample(tr.zoom, t); if (zoom !== undefined) p.zoom = zoom;
+  const gaze = sample(tr.gaze, t); if (gaze) { p.gx = gaze[0]; p.gy = gaze[1]; }
+  const lid = sample(tr.lid, t); if (lid !== undefined) p.lid = lid;
+  if (clip.fn) { const f = clip.fn(t, a); for (const k of POSE_KEYS) { const v = f[k]; if (v !== undefined) p[k] = MUL.has(k) ? p[k] * v : p[k] + v; } }
   return p;
 }
-const mixPose = (a: Pose, b: Pose, k: number) => { const o = {} as Pose; for (const key in REST) (o as any)[key] = lerp((a as any)[key], (b as any)[key], k); return o; };
+const mixPose = (a: Pose, b: Pose, k: number): Pose => { const o = { ...REST }; for (const key of POSE_KEYS) o[key] = lerp(a[key], b[key], k); return o; };
 const wrapYaw = (p: Pose): Pose => ({ ...p, yaw: ((p.yaw + 180) % 360 + 360) % 360 - 180 });
-const clipFace = (clip: Clip, t: number) => { let n: string | null | undefined = undefined; for (const [kt, name] of clip.tracks?.face || []) { if (kt > t) break; if (name !== "blink") n = name; } return n; };
+const clipFace = (clip: Clip, t: number) => { let n: FaceName | null | undefined = undefined; for (const [kt, name] of clip.tracks?.face || []) { if (kt > t) break; if (name !== "blink") n = name; } return n; };
 
 /** A face a style lacks falls back along this chain, so a style with 4 faces still plays every state. */
 export const FACE_FALLBACK: Partial<Record<FaceName, FaceName>> = { laughing: "happy", calm: "happy", wink: "happy", love: "happy", focused: "neutral", squinted: "focused", angry: "squinted", confused: "focused", scared: "surprised", dizzy: "sad", shy: "calm", surprised: "neutral", happy: "neutral", sad: "neutral", sleepy: "neutral" };
 export const FACES: FaceName[] = ["neutral", "happy", "laughing", "calm", "focused", "surprised", "sad", "sleepy", "squinted", "angry", "confused", "scared", "wink", "dizzy", "love", "shy", "talk"];
 const FEATURES = new Set(["eyes", "mouth", "nose", "eyebrows", "glasses", "facialHair", "accessories"]);
 
-type PokeState = { name: PokeName; t: number; turns?: number };
-type PokeAcc = { lift: number; sx: number; sy: number; roll: number; pitch: number; yaw: number; x: number; y: number };
-/** Pokes compose additively over whatever clip is playing. */
-export const POKES: Record<string, { dur: (p: PokeState) => number; f: (e: number, o: PokeAcc, p: PokeState) => void }> = {
+/** A poke in flight: its name, how long it has run, and its parameters. */
+export interface PokeState extends PokeParams { name: PokeName; t: number }
+/** What pokes add to the pose this frame: lift/roll/pitch/yaw/x/y add, sx/sy multiply. */
+export interface PokeAcc { lift: number; sx: number; sy: number; roll: number; pitch: number; yaw: number; x: number; y: number }
+/** One poke: how long it lasts and what it adds at progress `e` (0..1). */
+export interface PokeDef { dur: (p: PokeState) => number; f: (e: number, o: PokeAcc, p: PokeState) => void }
+const bounce: PokeDef = { dur: () => 0.6, f: (e, o) => { const land = bump(e, 0, 0.2) + bump(e, 0.8, 1), air = bump(e, 0.2, 0.8); o.lift += 11 * Math.sin(Math.PI * clamp((e - 0.15) / 0.7, 0, 1)); o.sx *= 1 + 0.07 * land - 0.05 * air; o.sy *= 1 - 0.09 * land + 0.05 * air; } };
+/** Pokes compose additively over whatever clip is playing. `hop` is `bounce` under its older name. */
+export const POKES: Record<PokeName, PokeDef> = {
   spin: { dur: (p) => 0.85 + 0.35 * ((p.turns || 1) - 1), f: (e, o, p) => { o.yaw += 180 * (p.turns || 1) * (1 - Math.cos(Math.PI * e)); } },
-  bounce: { dur: () => 0.6, f: (e, o) => { const land = bump(e, 0, 0.2) + bump(e, 0.8, 1), air = bump(e, 0.2, 0.8); o.lift += 11 * Math.sin(Math.PI * clamp((e - 0.15) / 0.7, 0, 1)); o.sx *= 1 + 0.07 * land - 0.05 * air; o.sy *= 1 - 0.09 * land + 0.05 * air; } },
+  bounce,
+  hop: bounce,
   nod: { dur: () => 0.5, f: (e, o) => { o.pitch -= 12 * bump(e, 0, 1); o.y += 2 * bump(e, 0, 1); } },
   wiggle: { dur: () => 0.7, f: (e, o) => { o.roll += 9 * Math.sin(Math.PI * 4 * e) * (1 - e); } },
   shake: { dur: () => 0.8, f: (e, o) => { const s = Math.sin(Math.PI * 5 * e) * (1 - e); o.yaw += 18 * s; o.x += 3 * s; o.roll += 2.5 * s; } },
   jolt: { dur: () => 0.45, f: (e, o) => { o.pitch += 9 * bump(e, 0, 1); o.y -= 5 * bump(e, 0, 0.7); o.sy *= 1 + 0.06 * bump(e, 0, 0.5); } },
 };
-POKES.hop = POKES.bounce;
 
 /** look(): a head turn that eases in over .5 s, holds, and eases out. */
 export const LOOK: Record<LookDirection, Partial<Pose>> = { left: { yaw: -16, x: -4, gx: -0.85 }, right: { yaw: 16, x: 4, gx: 0.85 }, up: { pitch: 11, y: -3, gy: 0.85 }, down: { pitch: -11, y: 2, gy: -0.8 }, center: {} };
 
 /** Reactions: a short moment over any state. Each one moves, sets lids and shows a prop, so it reads even when a style has no art for the face. */
-export const REACTIONS: Record<string, { face: FaceName; pokes?: PokeName[]; props?: string[]; pose?: Partial<Pose>; gaze?: [number, number]; lid?: number; fn?: (t: number) => Partial<Pose> }> = {
+export interface ReactionDef { face: FaceName; pokes?: PokeName[]; props?: string[]; pose?: Partial<Pose>; gaze?: [number, number]; lid?: number; fn?: (t: number) => Partial<Pose> }
+export const REACTIONS: Record<ReactionName, ReactionDef> = {
   happy: { face: "happy", pokes: ["bounce"], props: ["sparkle"], pose: { pitch: 4 } },
   laughing: { face: "laughing", props: ["sparkle"], pose: { pitch: 8 }, fn: (t) => ({ y: -1.8 * Math.abs(Math.sin(PI2 * t / 0.18)) }) },
   surprised: { face: "surprised", pokes: ["jolt"], props: ["bang"], pose: { pitch: 6, y: -2 }, gaze: [0, 0.1] },
@@ -95,10 +106,12 @@ export const REACTIONS: Record<string, { face: FaceName; pokes?: PokeName[]; pro
   sleepy: { face: "sleepy", lid: 0.88, props: ["zzz"], pose: { pitch: -9, roll: 7, y: 3 }, gaze: [0, -0.3] },
   shy: { face: "shy", props: ["blush", "hearts"], pokes: ["wiggle"], pose: { yaw: -12, roll: -6, pitch: -5 }, gaze: [-0.45, -0.4] },
 };
+const isReaction = (name: string): name is ReactionName => Object.prototype.hasOwnProperty.call(REACTIONS, name);
 
 // ---- shared, lazily created globals (SSR-safe) ----
 type Live = { step(dt: number): void; visible: boolean; reduced: boolean };
 const live = new Set<Live>();
+const byRoot = new WeakMap<Element, Live>();
 let raf = 0, last = 0, io: IntersectionObserver | null = null, styled = false;
 function tick(now: number) {
   raf = 0; const dt = Math.min(0.1, (now - last) / 1000 || 1 / 60); last = now;
@@ -107,7 +120,7 @@ function tick(now: number) {
 }
 function wake() { if (!raf && typeof requestAnimationFrame === "function" && live.size) { last = performance.now(); raf = requestAnimationFrame(tick); } }
 function observer() {
-  if (!io && typeof IntersectionObserver === "function") io = new IntersectionObserver((es) => es.forEach((e) => { const a = (e.target as any).__aavAvatar; if (a) a.visible = e.isIntersecting; }));
+  if (!io && typeof IntersectionObserver === "function") io = new IntersectionObserver((es) => es.forEach((e) => { const a = byRoot.get(e.target); if (a) a.visible = e.isIntersecting; }));
   return io;
 }
 /** Add the stylesheet to the document once. Called by createAvatar unless injectStyles is false. */
@@ -126,6 +139,30 @@ function uniqueIds(html: string, uid: string) {
   return html;
 }
 
+type Vec = { x: number; y: number };
+type PartEntry = { els: HTMLElement[]; k: number };
+type FaceEntry = { nodes: Node[]; parts: Record<string, PartEntry> };
+/** One avatar's private state. */
+interface Internal extends Live, CursorSource {
+  root: HTMLElement; ph: number; uid: string;
+  state: string; st: number; T: number; clip: { name: string; t: number }; queue: string[]; onceIdx: number;
+  bridge: { pose: Pose; t: number; dur: number } | null; base: Pose;
+  face: FaceName | null; faces: Partial<Record<FaceName, FaceEntry>>; parts: Record<string, PartEntry>;
+  momentFace: FaceName | null; momentUntil: number; holdFace: FaceName | null;
+  reactS: { name: ReactionName; t: number; dur: number } | null; lookS: { dir: LookDirection; t: number; hold: number } | null;
+  flashes: Record<string, number>; propEls: Map<string, HTMLElement>; propKey: string; quietProps: boolean;
+  glance: Vec; gl: Vec; glanceAt: number; glanceBack: number;
+  blinkT: number; nextBlink: number; eye: Vec; talkOpen: boolean; talkT: number;
+  ptr: { x: number; y: number; hold: number; want: number }; pokes: PokeState[];
+  drag: { on: boolean; x: number; y: number; vx: number; vy: number; tx: number; ty: number; sw: number; sv: number; gx: number; gy: number; prev: string | null };
+  unit: number; compact: boolean; anchored: boolean; backside: boolean; artStyle: StyleArt; anchors: Anchors | undefined;
+  worn: string[];
+  lastAttention: number; wakeTo: string | null; autoBored: number; noBlink: boolean;
+  miniArt(): string;
+}
+// the computer-use cursor works the edges of the picture, never over the face
+const CURSOR: Key<[number, number]>[] = [[0, [-0.78, -0.35]], [1.1, [0.74, -0.5]], [1.6, [0.74, -0.5]], [2.7, [0.3, 0.68]], [3.2, [0.3, 0.68]], [4.3, [-0.72, 0.42]], [4.8, [-0.72, 0.42]], [6, [-0.78, -0.35]]];
+
 /** Mount a living avatar into `root`. */
 export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptions = {}): BotAvatar {
   if (opts.injectStyles !== false) injectStyles(root.ownerDocument);
@@ -138,19 +175,29 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
   const $ = (s: string) => root.querySelector(s) as HTMLElement;
   const dragEl = $(".aav-drag"), body = $(".aav-body"), artEl = $(".aav-art"), fx = $(".aav-fx"), front = $(".aav-front"), back = $(".aav-back"), shadow = $(".aav-shadow");
 
-  const a: any = {
+  const a: Internal = {
     root, visible: true, ph: r() * PI2, uid: "bs" + ++uidSeq,
-    state: "idle", st: 0, T: 0, clip: null, queue: [] as string[], onceIdx: -1, bridge: null, base: { ...REST },
-    face: null, faces: {} as Record<string, { nodes: Node[]; parts: Record<string, { els: HTMLElement[]; k: number }> }>, parts: {},
-    momentFace: null, momentUntil: 0, holdFace: null, reactS: null, lookS: null, flashes: {} as Record<string, number>, propEls: new Map<string, HTMLElement>(), propKey: "",
+    state: "idle", st: 0, T: 0, clip: { name: "", t: 0 }, queue: [], onceIdx: -1, bridge: null, base: { ...REST },
+    face: null, faces: {}, parts: {},
+    momentFace: null, momentUntil: 0, holdFace: null, reactS: null, lookS: null, flashes: {}, propEls: new Map(), propKey: "", quietProps: false,
     glance: { x: 0, y: 0 }, gl: { x: 0, y: 0 }, glanceAt: 1 + r() * 3, glanceBack: 0,
     blinkT: 0, nextBlink: 1 + r() * 3, eye: { x: 0, y: 0 }, talkOpen: false, talkT: 0,
-    ptr: { x: 0, y: 0, hold: 0, want: 0 }, pokes: [] as PokeState[],
-    drag: { on: false, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, sw: 0, sv: 0, gx: 0, gy: 0, prev: null as string | null },
-    unit: 1, compact: false, anchored: false, backside: false, artStyle: art, anchors: undefined as any, lastAttention: 0, wakeTo: null as string | null,
+    ptr: { x: 0, y: 0, hold: 0, want: 0 }, pokes: [],
+    drag: { on: false, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, sw: 0, sv: 0, gx: 0, gy: 0, prev: null },
+    unit: 1, compact: false, anchored: false, backside: false, artStyle: art, anchors: undefined, lastAttention: 0, wakeTo: null,
+    worn: (opts.wear || []).filter((p) => PROPS[p]),
     autoBored: opts.autoSleep === false ? 0 : opts.autoSleep?.bored ?? 45, noBlink: !!opts.static, reduced: false,
+    // filled in below, once the helpers they call exist
+    step: () => {},
+    cursorAt: (t) => { const v = sample(CURSOR, t % 6)!; return { x: v[0], y: v[1] }; },
+    miniArt: () => {
+      const f = style.faces.neutral;
+      if (style.tier === "picture" || f.startsWith("<img")) return f;
+      if (f.startsWith("<svg")) return `<img alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(f)}">`;
+      return uniqueIds(f, a.uid + "m" + Math.floor(r() * 1e6));
+    },
   };
-  (root as any).__aavAvatar = a; observer()?.observe(root);
+  byRoot.set(root, a); observer()?.observe(root);
   const measure = () => { a.unit = (root.clientWidth || 200) / 200; const c = root.clientWidth > 0 && root.clientWidth < 56; if (c !== a.compact) { a.compact = c; root.classList.toggle("compact", c); } };
   const ro = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null; ro?.observe(root); measure();
 
@@ -163,26 +210,19 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     paintFace("neutral");
   }
   // ---- faces: parsed once per avatar, swapped by moving nodes ----
-  function faceEntry(name: string) {
-    if (a.faces[name]) return a.faces[name];
-    const holder = document.createElement("div"); holder.innerHTML = uniqueIds((style.faces as any)[name], a.uid);
-    const parts: Record<string, { els: HTMLElement[]; k: number }> = {};
+  function faceEntry(name: FaceName): FaceEntry {
+    const hit = a.faces[name]; if (hit) return hit;
+    const holder = document.createElement("div"); holder.innerHTML = uniqueIds(style.faces[name] ?? style.faces.neutral, a.uid);
+    const parts: Record<string, PartEntry> = {};
     for (const [part, k] of Object.entries(style.parallax || {})) { const els = holder.querySelectorAll<HTMLElement>(".aav-part-" + part); if (els.length) parts[part] = { els: [...els], k }; }
     return (a.faces[name] = { nodes: [...holder.childNodes], parts });
   }
-  function paintFace(name: string) { const f = faceEntry(name); artEl.replaceChildren(...f.nodes); a.parts = f.parts; a.face = name; }
-  const resolveFace = (n: string | null | undefined): string => { let k: any = n, g = 0; while (k && (style.faces as any)[k] == null && g++ < 8) k = (FACE_FALLBACK as any)[k]; return k && (style.faces as any)[k] != null ? k : "neutral"; };
-  a.cursorAt = (t: number) => { const v = sample(CURSOR, t % 6); return { x: v[0], y: v[1] }; };
-  a.miniArt = () => {
-    const f = style.faces.neutral;
-    if (style.tier === "picture" || f.startsWith("<img")) return f;
-    if (f.startsWith("<svg")) return `<img alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(f)}">`;
-    return uniqueIds(f, a.uid + "m" + Math.floor(r() * 1e6));
-  };
+  function paintFace(name: FaceName) { const f = faceEntry(name); artEl.replaceChildren(...f.nodes); a.parts = f.parts; a.face = name; }
+  const resolveFace = (n: FaceName | null | undefined): FaceName => { let k = n, g = 0; while (k && style.faces[k] == null && g++ < 8) k = FACE_FALLBACK[k]; return k && style.faces[k] != null ? k : "neutral"; };
 
   // ---- anchors for worn props: from the style, else measured from tagged parts ----
   function anchor() {
-    let A: any = style.anchors;
+    let A: Anchors | undefined = style.anchors;
     if (!A) {
       const box = artEl.getBoundingClientRect(); if (!box.width) return false;
       const R = (sel: string) => {
@@ -197,22 +237,23 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
       const hw = F ? F.r - F.l : E ? (E.r - E.l) * 2.1 : 0.5;
       const my = M ? (M.t + M.b) / 2 : ey + hw * 0.3;
       const cx = E ? (E.l + E.r) / 2 : F ? (F.l + F.r) / 2 : 0.5;
-      A = { cx, ey, hw, crown: Math.min(H ? H.t : 1, F ? F.t : 1, ey - hw * 0.45), my, chin: M ? M.b + (M.b - ey) * 0.3 : F ? F.b : ey + hw * 0.55 };
+      const measured: Anchors = { cx, ey, hw, crown: Math.min(H ? H.t : 1, F ? F.t : 1, ey - hw * 0.45), my, chin: M ? M.b + (M.b - ey) * 0.3 : F ? F.b : ey + hw * 0.55 };
       // the shoulder: a point inside the clothes, part-way out toward the edge, where an arm can root
-      if (Cl) { A.sx = Math.min(0.97, cx + (Cl.r - cx) * 0.62); A.sy = Cl.t + (Cl.b - Cl.t) * 0.3; A.br = Cl.r; }
+      if (Cl) { measured.sx = Math.min(0.97, cx + (Cl.r - cx) * 0.62); measured.sy = Cl.t + (Cl.b - Cl.t) * 0.3; measured.br = Cl.r; }
+      A = measured;
     }
-    A = { ...A, ...(style.anchorAdjust || {}) };
-    A.chest = A.chest ?? Math.min(0.88, A.chin + 0.2);
-    for (const [k, v] of Object.entries(A)) body.style.setProperty("--" + k, (v as number).toFixed(4));
-    a.anchors = A; a.anchored = true;
-    for (const [id, el] of a.propEls) if (PROPS[id]?.anchored && typeof PROPS[id].html === "function") (el as HTMLElement).innerHTML = (PROPS[id].html as any)(a);
+    const anchors: Anchors = { ...A, ...(style.anchorAdjust || {}) };
+    anchors.chest = anchors.chest ?? Math.min(0.88, anchors.chin + 0.2);
+    for (const [k, v] of Object.entries(anchors)) if (typeof v === "number") body.style.setProperty("--" + k, v.toFixed(4));
+    a.anchors = anchors; a.anchored = true;
+    for (const [id, el] of a.propEls) { const P = PROPS[id]; if (P?.anchored && typeof P.html === "function") el.innerHTML = P.html(a); }
     return true;
   }
 
   // ---- props ----
   function propIds() {
-    const rec = STATES[a.state], want = new Set<string>(([] as string[]).concat(rec.prop || [], rec.wear || []));
-    for (const [id, until] of Object.entries(a.flashes)) if (a.T < (until as number)) want.add(id);
+    const rec = STATES[a.state], want = new Set<string>(([] as string[]).concat(rec.prop || [], rec.wear || [], a.worn));
+    for (const [id, until] of Object.entries(a.flashes)) if (a.T < until) want.add(id);
     if (want.has("cape")) want.add("bow");
     return want;
   }
@@ -236,19 +277,19 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
   function flash(id: string, secs = 2) { a.flashes[id] = a.T + secs; syncProps(); wake(); }
 
   // ---- clips: several per state, shuffled, never the same one twice in a row ----
-  const recClips = (rec: any): string[] => (a.compact && rec.compact) || rec.clips;
-  function pick(rec: any) {
+  const recClips = (rec: StateRecipe): string[] => (a.compact && rec.compact) || rec.clips;
+  function pick(rec: StateRecipe): string {
     const list = recClips(rec);
     if (!a.queue.length) {
       const q = [...list]; for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [q[i], q[j]] = [q[j], q[i]]; }
-      const k = q.findIndex((n) => n !== a.clip?.name); if (k > 0) [q[0], q[k]] = [q[k], q[0]];
+      const k = q.findIndex((n) => n !== a.clip.name); if (k > 0) [q[0], q[k]] = [q[k], q[0]];
       a.queue = q;
     }
-    return a.queue.shift();
+    return a.queue.shift()!;
   }
   function startClip(name: string, bridgeDur = 0.32) {
     if (!CLIPS[name]) throw new Error(`awesome-agent-avatars: no clip named "${name}"`);
-    if (a.clip) a.bridge = { pose: wrapYaw(a.base), t: 0, dur: bridgeDur };
+    if (a.clip.name) a.bridge = { pose: wrapYaw(a.base), t: 0, dur: bridgeDur };
     a.clip = { name, t: 0 };
   }
   function setState(s: string, { quiet = false } = {}) {
@@ -262,16 +303,13 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     if (!quiet) for (const p of rec.pokes || []) Array.isArray(p) ? poke(p[0], p[1]) : poke(p);
     opts.onState?.(s);
   }
-  function poke(name: PokeName, p: { turns?: number } = {}) { if (POKES[name] && !a.reduced) a.pokes.push({ name, t: 0, ...p }); wake(); }
+  function poke(name: PokeName, p: PokeParams = {}) { if (POKES[name] && !a.reduced) a.pokes.push({ name, t: 0, ...p }); wake(); }
   const attend = () => {
     a.lastAttention = a.T;
     if (a.state === "sleeping") setState("waking");
     else if (a.state === "bored") setState("idle");
     else if (a.state === "drowsy" && a.wakeTo) setState(a.wakeTo, { quiet: true });
   };
-  // the computer-use cursor works the edges of the picture, never over the face
-  const CURSOR = [[0, [-0.78, -0.35]], [1.1, [0.74, -0.5]], [1.6, [0.74, -0.5]], [2.7, [0.3, 0.68]], [3.2, [0.3, 0.68]], [4.3, [-0.72, 0.42]], [4.8, [-0.72, 0.42]], [6, [-0.78, -0.35]]];
-
   // ---- one frame ----
   a.step = (dt: number) => {
     if (!a.anchored) { body.style.transform = "none"; anchor(); }
@@ -310,14 +348,14 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     if (a.lookS) {
       const L = a.lookS; L.t += dt;
       const w = L.t < 0.5 ? bez("io")(L.t / 0.5) : L.t < 0.5 + L.hold ? 1 : bez("io")(1 - (L.t - 0.5 - L.hold) / 0.5);
-      for (const [k, v] of Object.entries(LOOK[L.dir as LookDirection] || {})) (P as any)[k] += (v as number) * w;
+      addPose(P, LOOK[L.dir] || {}, w);
       if (L.t >= L.hold + 1) a.lookS = null;
     }
     if (a.reactS) {
       const X = a.reactS, Rx = REACTIONS[X.name]; X.t += dt;
       const w = X.t < 0.25 ? smooth(X.t / 0.25) : X.t > X.dur - 0.4 ? smooth((X.dur - X.t) / 0.4) : 1;
-      for (const [k, v] of Object.entries(Rx.pose || {})) (P as any)[k] += (v as number) * w;
-      if (Rx.fn) for (const [k, v] of Object.entries(Rx.fn(X.t))) (P as any)[k] += (v as number) * w;
+      addPose(P, Rx.pose || {}, w);
+      if (Rx.fn) addPose(P, Rx.fn(X.t), w);
       if (Rx.gaze) { P.gx = lerp(P.gx, Rx.gaze[0], w); P.gy = lerp(P.gy, Rx.gaze[1], w); }
       if (Rx.lid) P.lid = Math.max(P.lid, Rx.lid * w);
       if (X.t >= X.dur) a.reactS = null;
@@ -377,8 +415,8 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     const sYaw = clamp(Math.sin(yaw * D2R) / 0.34, -1.4, 1.4), sPitch = clamp(Math.sin(pitch * D2R) / 0.34, -1.4, 1.4);
     const lx = clamp(0.75 * a.eye.x + 0.45 * sYaw, -1.3, 1.3), ly = clamp(0.75 * a.eye.y + 0.45 * sPitch, -1.3, 1.3);
     let lid = clamp(Math.max(P.lid, rec.lid || 0, blink), 0, 1);
-    const closed = (style.closedFaces || []).includes(a.face);
-    for (const [part, { els, k }] of Object.entries(a.parts) as [string, { els: HTMLElement[]; k: number }][]) {
+    const closed = !!a.face && (style.closedFaces || []).includes(a.face);
+    for (const [part, { els, k }] of Object.entries(a.parts)) {
       const kk = style.partUnits === "px" ? k * u : k;
       const tf = `translate(${lx * kk}px,${-ly * kk}px)` + (part === "eyes" && !closed ? ` scaleY(${1 - 0.92 * lid})` : "");
       // inline, not a class: some styles draw parts through <use>, whose clones ignore ancestor class changes
@@ -388,7 +426,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     for (const el of front.querySelectorAll<HTMLElement>(".aav-w[data-k]")) { const k = +el.dataset.k! * u; el.style.transform = `translate(${lx * k}px,${-ly * k}px)`; }
     const cur = a.propEls.get("cursor");
     if (cur) { const c = a.cursorAt(a.clip.t); (cur.firstChild as HTMLElement).style.transform = `translate(${c.x * 70 * u}px,${c.y * 60 * u}px)`; const t6 = a.clip.t % 6; cur.classList.toggle("click", (t6 > 1.15 && t6 < 1.45) || (t6 > 2.75 && t6 < 3.05) || (t6 > 4.35 && t6 < 4.65)); }
-    if (Object.keys(a.flashes).length && [...propIds()].sort().join() !== a.propKey) { for (const [id, t] of Object.entries(a.flashes)) if (a.T >= (t as number)) delete a.flashes[id]; syncProps(); }
+    if (Object.keys(a.flashes).length && [...propIds()].sort().join() !== a.propKey) { for (const [id, t] of Object.entries(a.flashes)) if (a.T >= t) delete a.flashes[id]; syncProps(); }
     lid = 0;
   };
 
@@ -397,7 +435,8 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     get state() { return a.state; },
     setState: (s, o) => { a.lastAttention = a.T; setState(s, o); wake(); },
     react: (name, secs = 2.4) => {
-      const Rx = REACTIONS[name]; if (!Rx) { api.moment(name as FaceName, secs); return; }
+      if (!isReaction(name)) { api.moment(name as FaceName, secs); return; }
+      const Rx = REACTIONS[name];
       a.lastAttention = a.T; a.momentFace = Rx.face; a.momentUntil = a.T + secs; a.reactS = { name, t: 0, dur: secs };
       for (const id of Rx.props || []) flash(id, secs);
       for (const p of Rx.pokes || []) poke(p);
@@ -421,11 +460,12 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
       if (a.reduced) { a.pokes = []; a.lookS = null; a.reactS = null; a.clip.t = 0; a.bridge = null; a.blinkT = 0; const keep = a.T; a.step(0); a.T = keep; } else wake();
     },
     setArt: (next) => { applyArt(next); a.quietProps = true; syncProps(); a.quietProps = false; a.step(0); },
+    setWear: (props) => { a.worn = props.filter((p) => PROPS[p]); syncProps(); },
+    get wear() { return a.worn; },
     flash,
     simulate: (secs) => { for (let i = 0; i < secs * 60; i++) a.step(1 / 60); },
-    destroy: () => { live.delete(a); io?.unobserve(root); ro?.disconnect(); detach(); for (const el of a.propEls.values()) el.remove(); root.replaceChildren(); root.classList.remove("aav-av"); },
+    destroy: () => { live.delete(a); byRoot.delete(root); io?.unobserve(root); ro?.disconnect(); detach(); for (const el of a.propEls.values()) el.remove(); root.replaceChildren(); root.classList.remove("aav-av"); },
   };
-  a.api = api;
 
   applyArt(art); anchor(); setState(opts.state || "idle", { quiet: !!opts.static });
   const detach = opts.interactions === false || opts.static ? () => {} : attachInteractions(api, root, opts.interactions === true || opts.interactions == null ? {} : opts.interactions);
