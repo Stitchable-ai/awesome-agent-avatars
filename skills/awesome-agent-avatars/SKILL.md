@@ -68,13 +68,13 @@ Any image: `pictureStyle({ id, name, src, credit })`. Any DiceBear style: `diceb
 
 ## 7. Let the agent edit its own avatar, and make new styles
 
-When the agent itself should change its look from a chat ("blue hair, a hat, no glasses, red clothes"), keep its recipe as a file (`avatar.json`) and use the `aav` CLI that ships with the package:
+When the agent itself should change its look from a chat ("blue hair, a hat, no glasses, red clothes"), keep its recipe as a file (`avatar.json`) and use the `aav` CLI that ships with the package. Run it as `npx --no-install aav` in a project that has `awesome-agent-avatars` installed: a bare `npx aav` in a non-interactive shell installs and runs whatever npm package is named `aav` without asking.
 
 ```sh
-npx aav describe avatar.json                     # what this style can change, what it cannot
-npx aav edit avatar.json --trait hairColor=blue --trait hat="a hat" --trait glasses=none --trait topColor=red --wear "a hat"
-npx aav switch avatar.json avataaars             # when the person accepts a style that has what was missing
-npx aav render avatar.json -o /tmp/still.svg     # look before you report
+npx --no-install aav describe avatar.json                     # what this style can change, what it cannot
+npx --no-install aav edit avatar.json --trait hairColor=blue --trait hat="a hat" --trait glasses=none --trait topColor=red --wear "a hat"
+npx --no-install aav switch avatar.json avataaars             # when the person accepts a style that has what was missing
+npx --no-install aav render avatar.json -o /tmp/still.svg     # look before you report
 ```
 
 Tell the person what changed, what this style cannot do, and the way through (`wear` a prop, or a style switch offered as a choice). For a new style, scaffold a data style first (`aav style new <dir> --derive <style>` or `--compose <style>`), lint it (`aav lint`), and render it before registering. Write code (`--module`) only when data cannot express the look. The app must make the recipe file the avatar's source of truth and keep the look out of the system prompt. Full guide: [references/authoring.md](references/authoring.md).

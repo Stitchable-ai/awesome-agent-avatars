@@ -111,16 +111,16 @@ agent.on("error", () => bot.error());
 Your agent is asked, in a chat, "can you have blue hair, a hat, no glasses and red clothes?". It should manage that as well as a person in an editor. It should also say what its style cannot do and offer a way through. And because it codes, it can make styles nobody drew.
 
 ```sh
-npx aav edit avatar.json --trait hairColor=blue --trait hat="a hat" --trait glasses=none --trait topColor=red --wear "a hat"
+npx -p awesome-agent-avatars aav edit avatar.json --trait hairColor=blue --trait hat="a hat" --trait glasses=none --trait topColor=red --wear "a hat"
 ✓ Hair colour → #3b82f6   ✓ Glasses → None   ✓ Top colour → #dc2626   ✓ wearing cap
 ✗ hat: Micah cannot change hat … try: wear: cap · → switch to Avataaars for hat: aav switch avatar.json avataaars
 
-npx aav style new styles/brand --derive gaze     # Gaze in your brand gradient: a data file, no code
-npx aav style new styles/hats  --compose micah   # Avataaars hats on Micah, placed head to head
-npx aav lint styles/brand                        # refuses scripts, external refs, a missing credit
+npx -p awesome-agent-avatars aav style new styles/brand --derive gaze     # Gaze in your brand gradient: a data file, no code
+npx -p awesome-agent-avatars aav style new styles/hats  --compose micah   # Avataaars hats on Micah, placed head to head
+npx -p awesome-agent-avatars aav lint styles/brand                        # refuses scripts, external refs, a missing credit
 ```
 
-The recipe is a file (`avatar.json`), so any agent with a shell can edit it and any host can watch it. The same functions ship as `awesome-agent-avatars/author` for editors and tool layers. Showing an avatar still needs nothing but the browser. Guide: [docs/authoring.md](docs/authoring.md).
+`aav` is the CLI inside the `awesome-agent-avatars` package, so name the package (`npx -p awesome-agent-avatars`, or `npx --no-install aav` once it is installed): a bare `npx aav` fetches whatever npm package is called `aav`. The recipe is a file (`avatar.json`), so any agent with a shell can edit it and any host can watch it. The same functions ship as `awesome-agent-avatars/author` for editors and tool layers. Showing an avatar still needs nothing but the browser. Guide: [docs/authoring.md](docs/authoring.md).
 
 ## Styles
 

@@ -34,6 +34,9 @@ export const AgentAvatar = forwardRef<BotAvatar | null, AgentAvatarProps>(functi
   }, [art]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => { av.current?.destroy(); av.current = null; }, []);
   useEffect(() => { if (state && av.current && av.current.state !== state) av.current.setState(state); }, [state]);
+  // worn props are identity: a recipe's `wear` changes without a remount (a host re-dressing on file change)
+  const wearKey = (opts.wear || []).join(",");
+  useEffect(() => { if (av.current && av.current.wear.join(",") !== wearKey) av.current.setWear(wearKey ? wearKey.split(",") : []); }, [wearKey]);
   useEffect(() => { av.current?.setGlow(!!glow); }, [glow, av.current]);
   useImperativeHandle(ref, () => av.current as BotAvatar, [av.current]);
 

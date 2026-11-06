@@ -16,9 +16,11 @@
 //        --palette name=#hex (host colour names), --dry (edit without writing).
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, statSync } from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const here = path.dirname(new URL(import.meta.url).pathname);
+// fileURLToPath, not URL.pathname: the pathname keeps %20 for a space and a leading /C: on Windows,
+// so an install under "My Projects" or C:\Users\… could not find its own dist
+const here = path.dirname(fileURLToPath(import.meta.url));
 const dist = (f) => pathToFileURL(path.join(here, "../dist", f)).href;
 const A = await import(dist("author.js"));
 const core = await import(dist("index.js"));

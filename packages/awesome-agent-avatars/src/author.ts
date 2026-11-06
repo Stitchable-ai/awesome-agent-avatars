@@ -43,7 +43,18 @@ const NAMED: Record<string, string> = {
 const MODIFIERS: Record<string, number> = { light: 0.35, pale: 0.45, pastel: 0.5, dark: -0.35, deep: -0.3, bright: 0.1 };
 
 const hex = (c: string) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c.trim());
-const expand = (c: string) => (c.length === 4 ? "#" + [...c.slice(1)].map((x) => x + x).join("") : c.toLowerCase());
+const expand = (c: string) => (c.length === 4 ? "#" + [...c.slice(1)].map((x) => x + x).join("") : c).toLowerCase();
+/** A colour that will be written into markup: a hex, or an error. Data style packages are untrusted text. */
+const needHex = (where: string, c: unknown): string => {
+  if (typeof c !== "string" || !hex(c)) throw new Error(`${where}: ${JSON.stringify(c)} is not a hex colour like #7c3aed`);
+  return expand(c.trim());
+};
+/** A name that will be written into markup and CSS selectors (`aav-part-<name>`): letters, digits, - and _. */
+const needName = (where: string, v: unknown): string => {
+  if (typeof v !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(v)) throw new Error(`${where}: ${JSON.stringify(v)} must be a plain name (letters, digits, - and _)`);
+  return v;
+};
+const reEscape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const mix = (a: string, b: string, t: number) => {
   const A = [1, 3, 5].map((i) => parseInt(expand(a).slice(i, i + 2), 16)), B = [1, 3, 5].map((i) => parseInt(expand(b).slice(i, i + 2), 16));
   return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("");
@@ -157,23 +168,40 @@ export function applyEdit(style: AvatarStyle, options: StyleOptions, patch: Edit
   const out: StyleOptions = { ...style.defaults(), ...options };
   const applied: EditChange[] = [], rejected: EditRejection[] = [];
   const missing = new Set<TraitName>();
+  // Two asks can land on one field (Avataaars keeps hair and headwear in `topVariant`). The later one
+  // wins and the earlier one is reported as replaced, except that a later "none" never clears what
+  // this same edit just set, so "long hair, no hat" keeps the hair instead of going bald.
+  const claimed = new Map<string, { trait?: TraitName; value: unknown; change?: EditChange }>();
   const setField = (key: string, value: unknown, trait?: TraitName) => {
     const f = style.fields.find((x) => x.key === key);
     if (!f) { rejected.push({ key, trait, value, reason: `${style.name} has no field "${key}"`, alternatives: style.fields.map((x) => x.key) }); return; }
-    const from = out[key];
+    let to: string | boolean, label: string;
     if (f.type === "select") {
       const { option, nearest } = resolveOption(f, value);
       if (!option) { rejected.push({ key, trait, value, reason: `no ${f.label.toLowerCase()} option matches "${value}"`, alternatives: (nearest.length ? nearest : f.options.slice(0, 6)).map((o) => `${o.value} (${optionTags(o).join(", ")})`) }); return; }
-      if (option.value !== from) { out[key] = option.value; applied.push({ key, trait, from, to: option.value, label: `${f.label} → ${option.label}` }); }
+      to = option.value; label = `${f.label} → ${option.label}`;
     } else if (f.type === "color") {
       const c = typeof value === "string" ? resolveColor(value, ctx.palette) : null;
       if (!c) { rejected.push({ key, trait, value, reason: `"${value}" is not a colour I know; use a hex like #3b82f6 or a colour word`, alternatives: f.swatches.slice(0, 8) }); return; }
-      if (c !== from) { out[key] = c; applied.push({ key, trait, from, to: c, label: `${f.label} → ${c}` }); }
+      to = c; label = `${f.label} → ${c}`;
     } else if (f.type === "toggle") {
       const b = typeof value === "boolean" ? value : ["true", "on", "yes", "1"].includes(norm(value)) ? true : ["false", "off", "no", "0"].includes(norm(value)) ? false : null;
       if (b == null) { rejected.push({ key, trait, value, reason: `${f.label} is on or off`, alternatives: ["on", "off"] }); return; }
-      if (b !== from) { out[key] = b; applied.push({ key, trait, from, to: b, label: `${f.label} → ${b ? "on" : "off"}` }); }
-    } else { const t = String(value); if (t !== from) { out[key] = t; applied.push({ key, trait, from, to: t, label: `${f.label} → ${t}` }); } }
+      to = b; label = `${f.label} → ${b ? "on" : "off"}`;
+    } else { to = String(value); label = `${f.label} → ${to}`; }
+    const prev = claimed.get(key);
+    if (prev) {
+      if (to === out[key]) return; // both asks agree
+      const by = prev.trait ?? key;
+      if (to === "none") { rejected.push({ key, trait, value, reason: `${f.label} also holds ${by}, which this edit already set; kept that`, alternatives: [] }); return; }
+      if (prev.change) applied.splice(applied.indexOf(prev.change), 1);
+      rejected.push({ key, trait: prev.trait, value: prev.value, reason: `replaced by ${trait ?? key}: both are ${f.label} in ${style.name}`, alternatives: [] });
+    }
+    const from = prev?.change ? prev.change.from : out[key];
+    out[key] = to;
+    const change = to !== from ? { key, trait, from, to, label } : undefined;
+    if (change) applied.push(change);
+    claimed.set(key, { trait, value, change });
   };
   for (const [t, v] of Object.entries(patch.traits || {}) as [TraitName, string][]) {
     const key = style.traits?.[t];
@@ -188,15 +216,25 @@ export function applyEdit(style: AvatarStyle, options: StyleOptions, patch: Edit
     if (!id) rejected.push({ key: "wear", value: w, reason: `nothing wearable matches "${w}"`, alternatives: Object.keys(WEARABLES) });
     else if (!wear.includes(id)) { wear.push(id); applied.push({ key: "wear", from: undefined, to: id, label: `wearing ${id}` }); }
   }
-  for (const w of patch.unwear || []) { const id = resolveWearable(w); if (id && wear.includes(id)) { wear = wear.filter((x) => x !== id); applied.push({ key: "wear", from: id, to: undefined, label: `no longer wearing ${id}` }); } }
+  for (const w of patch.unwear || []) {
+    // a prop already worn is removed by its own id first: "hat" is the party hat a recipe wears,
+    // even though the word "hat" on its own means a cap when putting one on
+    const exact = norm(w), id = wear.includes(exact) ? exact : resolveWearable(w);
+    if (!id) rejected.push({ key: "wear", value: w, reason: `nothing wearable matches "${w}"`, alternatives: wear.length ? wear : Object.keys(WEARABLES) });
+    else if (wear.includes(id)) { wear = wear.filter((x) => x !== id); applied.push({ key: "wear", from: id, to: undefined, label: `no longer wearing ${id}` }); }
+  }
   const switchable = (ctx.styles || []).filter((s) => s.id !== style.id).map((s) => ({ style: s.id, name: s.name, has: [...missing].filter((t) => s.traits?.[t]) })).filter((s) => s.has.length);
   return { options: out, wear, applied, rejected, switchable };
 }
 
 export function resolveWearable(word: string): string | null {
-  const w = norm(word).replace(/^(a|an|the)\s+/, "");
+  const w = norm(word).replace(/^(a|an|the)\s+/, "").replace(/\s+/g, " ");
+  if (!w) return null;
   // a plain word first ("hat" → cap), then the id itself ("hat" is the party cone), then a loose match
-  const hit = Object.entries(WEARABLES).find(([, words]) => words.includes(w)) || (WEARABLES[w] ? [w] : undefined) || Object.entries(WEARABLES).find(([, words]) => words.some((x) => x.includes(w) || w.includes(x)));
+  // on whole words only ("a red cap" → cap, "knit" → beanie), never on fragments ("t", "rainbow")
+  const padded = ` ${w} `;
+  const hit = Object.entries(WEARABLES).find(([, words]) => words.includes(w)) || (WEARABLES[w] ? [w] : undefined)
+    || Object.entries(WEARABLES).find(([, words]) => words.some((x) => padded.includes(` ${x} `) || x.split(" ").includes(w)));
   return hit ? hit[0] : null;
 }
 function wearAlternatives(t: TraitName, v: string): string[] {
@@ -206,13 +244,20 @@ function wearAlternatives(t: TraitName, v: string): string[] {
 
 /** Move a look to another style: carries every trait both styles share, reports the rest as lost. */
 export function carryTraits(from: AvatarStyle, options: StyleOptions, to: AvatarStyle, ctx: { palette?: Record<string, string> } = {}): { options: StyleOptions; carried: TraitName[]; lost: TraitName[] } {
-  const patch: Partial<Record<TraitName, string>> = {};
+  const values: Partial<Record<TraitName, string>> = {}, patch: Partial<Record<TraitName, string>> = {};
   const carried: TraitName[] = [], lost: TraitName[] = [];
   for (const t of Object.keys(TRAITS) as TraitName[]) {
     const fk = from.traits?.[t]; if (!fk || options[fk] === undefined) continue;
     const ff = from.fields.find((f) => f.key === fk);
     const value = ff?.type === "select" ? optionTags(ff.options.find((o) => o.value === options[fk]) || { value: "", label: String(options[fk]) }).join(" ") : String(options[fk]);
-    if (to.traits?.[t]) { patch[t] = value; carried.push(t); } else lost.push(t);
+    if (to.traits?.[t]) values[t] = value; else lost.push(t);
+  }
+  for (const [t, v] of Object.entries(values) as [TraitName, string][]) {
+    // "no hat" has nothing to carry onto a field the target shares with a trait that is being carried
+    // (Avataaars: hair and headwear are one field); sending it would clear the hair just carried
+    const shared = (Object.entries(values) as [TraitName, string][]).some(([u, w]) => u !== t && w !== "none" && to.traits?.[u] === to.traits?.[t]);
+    if (!(v === "none" && shared)) patch[t] = v;
+    carried.push(t);
   }
   const r = applyEdit(to, to.defaults(), { traits: patch }, ctx);
   const really = carried.filter((t) => !r.rejected.some((x) => x.trait === t));
@@ -261,17 +306,22 @@ export function deriveStyle<O extends StyleOptions = StyleOptions, B extends Sty
 
 /** Replace one flat colour in every face with a gradient (ids stay unique per avatar: the engine suffixes them). */
 export function fillGradient(art: StyleArt, color: string, stops: string[], angle = 135): StyleArt {
-  const a = ((angle - 90) * Math.PI) / 180, x2 = 0.5 + Math.cos(a) / 2, y2 = 0.5 + Math.sin(a) / 2;
-  const id = "aav-grad-" + stops.join("").replace(/[^0-9a-z]/gi, "").slice(0, 12);
-  const def = `<linearGradient id="${id}" x1="${(1 - x2).toFixed(3)}" y1="${(1 - y2).toFixed(3)}" x2="${x2.toFixed(3)}" y2="${y2.toFixed(3)}">${stops.map((s, i) => `<stop offset="${(i / (stops.length - 1)).toFixed(3)}" stop-color="${s}"/>`).join("")}</linearGradient>`;
-  const re = new RegExp(`(fill|stroke)="${expand(color)}"`, "gi");
+  // every value below is written into SVG markup, and a data style (style.json) supplies them: hex only
+  const target = needHex("fillGradient colour", color);
+  if (!Array.isArray(stops) || !stops.length) throw new Error("fillGradient: stops must be a non-empty list of hex colours");
+  const cols = stops.map((s, i) => needHex(`fillGradient stop ${i + 1}`, s));
+  const deg = Number.isFinite(Number(angle)) ? Number(angle) : 135;
+  const a = ((deg - 90) * Math.PI) / 180, x2 = 0.5 + Math.cos(a) / 2, y2 = 0.5 + Math.sin(a) / 2;
+  const id = "aav-grad-" + cols.join("").replace(/[^0-9a-z]/gi, "").slice(0, 12);
+  const def = `<linearGradient id="${id}" x1="${(1 - x2).toFixed(3)}" y1="${(1 - y2).toFixed(3)}" x2="${x2.toFixed(3)}" y2="${y2.toFixed(3)}">${cols.map((s, i) => `<stop offset="${(cols.length > 1 ? i / (cols.length - 1) : 0).toFixed(3)}" stop-color="${s}"/>`).join("")}</linearGradient>`;
+  const re = new RegExp(`(fill|stroke)="${target}"`, "gi");
   const faces = {} as StyleArt["faces"];
   for (const [k, svg] of Object.entries(art.faces) as [FaceName, string][]) {
-    const swapped = svg.replace(/#[0-9a-f]{3,6}(?=")/gi, (m) => (expand(m) === expand(color) ? expand(color) : m)).replace(re, `$1="url(#${id})"`);
+    const swapped = svg.replace(/#[0-9a-f]{3,6}(?=")/gi, (m) => (expand(m) === target ? target : m)).replace(re, `$1="url(#${id})"`);
     faces[k] = swapped.includes("<defs>") ? swapped.replace("<defs>", "<defs>" + def) : swapped.replace(/(<svg[^>]*>)/, `$1<defs>${def}</defs>`);
   }
-  const mid = stops[Math.floor(stops.length / 2)];
-  return { ...art, faces, skin: art.skin && expand(art.skin) === expand(color) ? mid : art.skin, sleeve: art.sleeve && expand(art.sleeve) === expand(color) ? mid : art.sleeve };
+  const mid = cols[Math.floor(cols.length / 2)];
+  return { ...art, faces, skin: art.skin && expand(art.skin) === target ? mid : art.skin, sleeve: art.sleeve && expand(art.sleeve) === target ? mid : art.sleeve };
 }
 
 // ---------------- new styles: compose ----------------
@@ -332,7 +382,7 @@ const HEAD_SEL = HEAD_PARTS.map((p) => `.aav-part-${p}`).join(", ");
 const headAroundEyes = (e: Box | null): Box | null => (e ? { x: e.x + e.w / 2 - e.w * 0.85, y: e.y - e.w * 0.95, w: e.w * 1.7, h: e.w * 2.1 } : null);
 /** The `<g class="…">…</g>` element with that class, nesting respected. */
 export function extractGroup(svg: string, cls: string): string | null {
-  const start = svg.search(new RegExp(`<g class="${cls}"[^>]*>`)); if (start < 0) return null;
+  const start = svg.search(new RegExp(`<g class="${reEscape(cls)}"[^>]*>`)); if (start < 0) return null;
   const re = /<g\b[^>]*>|<\/g>/g; re.lastIndex = start; let depth = 0, m: RegExpExecArray | null;
   while ((m = re.exec(svg))) { depth += m[0] === "</g>" ? -1 : 1; if (!depth) return svg.slice(start, m.index + m[0].length); }
   return null;
@@ -348,6 +398,10 @@ export function composeStyle(spec: ComposeSpec, opts: { measure?: Measure } = {}
   const fields: Field[] = [...spec.base.fields];
   const traits: TraitMap = { ...(spec.base.traits || {}) };
   for (const L of spec.layers) {
+    // the key, part and hidden parts become class names in the art (`aav-part-<name>`) and CSS
+    // selectors in the engine, and a data style (style.json) supplies them: plain names only
+    needName("composeStyle: layer key", layerKey(L)); needName("composeStyle: layer part", L.part);
+    for (const h of L.hides || []) needName("composeStyle: layer hides", h);
     const f = L.from.fields.find((x) => x.key === L.field);
     if (!f || f.type !== "select") throw new Error(`composeStyle: ${L.from.id} has no select field "${L.field}"`);
     const options = f.options.filter((o) => !L.only || L.only.includes(o.value) || o.value === "none");
@@ -439,7 +493,14 @@ export function composeStyle(spec: ComposeSpec, opts: { measure?: Measure } = {}
 
 export interface LintIssue { level: "error" | "warn"; code: string; message: string }
 
-const UNSAFE = [/<script\b/i, /<foreignObject\b/i, /\son[a-z]+\s*=/i, /javascript:/i, /href="(?!#)[^"]*"/i, /url\((?!['"]?#)/i, /<iframe\b/i, /<object\b/i, /<embed\b/i, /@import/i];
+// The engine mounts faces with innerHTML, so these follow the HTML tokenizer rather than tidy markup:
+// an attribute may follow a quote or a slash as well as a space (`<img/src="x"/onerror=…>`), and a
+// value may be single-quoted, unquoted or entity-encoded (`href='java&#115;cript:…'`), which is why
+// any href that is not a local `#ref` is refused outright rather than matched against "javascript:".
+const UNSAFE = [/<script\b/i, /<foreignObject\b/i, /[\s"'/]on[a-z]+\s*=/i, /javascript:/i, /\bhref\s*=(?!\s*["']?\s*#)/i, /url\((?!\s*['"]?\s*#)/i,
+  /<(iframe|object|embed|link|meta|base)\b/i, /@import/i, /\battributeName\s*=\s*["']?(?:[a-z]+:)?(?:href|on[a-z]+)/i];
+/** Drawn (parts) art is SVG, where no element takes `src`: one that does is HTML smuggled into it. */
+const UNSAFE_PARTS = [/[\s"'/]src\s*=/i];
 
 /** Problems an agent can act on before it registers a style, and a host must check before it loads one. */
 export async function lintStyle(style: AvatarStyle, options?: StyleOptions): Promise<LintIssue[]> {
@@ -449,7 +510,8 @@ export async function lintStyle(style: AvatarStyle, options?: StyleOptions): Pro
   let art: StyleArt;
   try { art = await style.render({ ...style.defaults(), ...(options || {}) }); } catch (e) { return [...issues, { level: "error", code: "render", message: `render threw: ${(e as Error).message}` }]; }
   if (!art.faces?.neutral) return [...issues, { level: "error", code: "neutral", message: "faces.neutral is required" }];
-  for (const [k, svg] of Object.entries(art.faces)) for (const re of UNSAFE) if (re.test(svg)) issues.push({ level: "error", code: "unsafe", message: `face "${k}" contains ${re.source.slice(0, 24)}… (scripts, foreign objects, event handlers and external references are not allowed)` });
+  const rules = art.tier === "parts" ? [...UNSAFE, ...UNSAFE_PARTS] : UNSAFE;
+  for (const [k, svg] of Object.entries(art.faces)) for (const re of rules) if (re.test(svg)) issues.push({ level: "error", code: "unsafe", message: `face "${k}" contains ${re.source.slice(0, 24)}… (scripts, foreign objects, event handlers and external references are not allowed)` });
   if (art.tier === "parts") {
     if (!/aav-part-eyes/.test(art.faces.neutral)) issues.push({ level: "warn", code: "eyes", message: "no aav-part-eyes: it cannot blink or follow the pointer with its eyes" });
     if (!/aav-part-mouth/.test(art.faces.neutral) && !art.faces.talk) issues.push({ level: "warn", code: "talk", message: "no aav-part-mouth and no talk face: it cannot talk while streaming" });
@@ -464,10 +526,17 @@ export async function lintStyle(style: AvatarStyle, options?: StyleOptions): Pro
 
 /** Strip what the lint forbids from every face. A host should run this on any art it did not author. */
 export function sanitizeArt(art: StyleArt): StyleArt {
-  const clean = (s: string) => s
-    .replace(/<script\b[\s\S]*?<\/script>/gi, "").replace(/<(foreignObject|iframe|object|embed)\b[\s\S]*?<\/\1>/gi, "")
-    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "").replace(/javascript:[^"')\s]*/gi, "")
-    .replace(/\s(xlink:)?href="(?!#)[^"]*"/gi, "").replace(/url\((?!['"]?#)[^)]*\)/gi, "none").replace(/@import[^;]*;/gi, "");
+  // attributes as the HTML tokenizer reads them: after a space, a quote or a slash; any quoting
+  const attr = (name: string) => new RegExp(`([\\s"'/])(?:${name})\\s*=\\s*("[^"]*"|'[^']*'|[^\\s"'>]+)`, "gi");
+  const clean = (s: string) => {
+    let t = s.replace(/<script\b[\s\S]*?<\/script>/gi, "").replace(/<(foreignObject|iframe|object|embed)\b[\s\S]*?<\/\1>/gi, "")
+      .replace(/<\/?(script|foreignObject|iframe|object|embed|link|meta|base)\b[^>]*>/gi, "")
+      .replace(attr("on[a-z]+"), "$1").replace(attr("attributeName"), (m, pre, v) => (/^["']?(?:[a-z]+:)?(?:href|on[a-z]+)/i.test(v) ? pre : m))
+      .replace(attr("(?:xlink:)?href"), (m, pre, v) => (/^["']?#/.test(v) ? m : pre))
+      .replace(/javascript:[^"')\s]*/gi, "").replace(/url\((?!\s*['"]?\s*#)[^)]*\)/gi, "none").replace(/@import[^;]*;?/gi, "");
+    if (art.tier === "parts") t = t.replace(attr("src"), "$1");
+    return t;
+  };
   const faces = {} as StyleArt["faces"];
   for (const [k, v] of Object.entries(art.faces) as [FaceName, string][]) faces[k] = clean(v);
   return { ...art, faces };
@@ -527,15 +596,19 @@ export function styleFromSpec(spec: StyleSpecFile, resolve: (id: string) => Avat
   const need = (id: string) => { const s = resolve(id); if (!s) throw new Error(`unknown style "${id}"`); return s; };
   if (spec.kind === "derive") {
     const base = need(spec.from);
+    // a data style must stay inert: everything it writes into the art is a checked colour, refused at load
+    const gradient = spec.gradient && { replace: needHex("gradient.replace", spec.gradient.replace), stops: (Array.isArray(spec.gradient.stops) ? spec.gradient.stops : []).map((s, i) => needHex(`gradient.stops[${i}]`, s)), angle: spec.gradient.angle };
+    if (gradient && !gradient.stops.length) throw new Error("gradient.stops must list at least one hex colour");
+    const recolor = Object.entries(spec.recolor || {}).map(([from, to]) => [needHex("recolor key", from), needHex(`recolor[${JSON.stringify(from)}]`, to)] as const);
     return deriveStyle(base, {
       id: spec.id, name: spec.name, drop: spec.drop, traits: spec.traits, by: spec.by,
       options: (o) => ({ ...base.defaults(), ...o, ...(spec.set || {}) }),
       art: (art) => {
         let a = art;
-        if (spec.gradient) a = fillGradient(a, spec.gradient.replace, spec.gradient.stops, spec.gradient.angle);
-        for (const [from, to] of Object.entries(spec.recolor || {})) {
-          const re = new RegExp(expand(from), "gi"); const faces = {} as StyleArt["faces"];
-          for (const [k, v] of Object.entries(a.faces) as [FaceName, string][]) faces[k] = v.replace(re, expand(to));
+        if (gradient) a = fillGradient(a, gradient.replace, gradient.stops, gradient.angle);
+        for (const [from, to] of recolor) {
+          const re = new RegExp(reEscape(from), "gi"); const faces = {} as StyleArt["faces"];
+          for (const [k, v] of Object.entries(a.faces) as [FaceName, string][]) faces[k] = v.replace(re, to);
           a = { ...a, faces };
         }
         return a;

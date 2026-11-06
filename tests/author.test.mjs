@@ -2,10 +2,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { applyEdit, carryTraits, describeStyle, deriveStyle, fillGradient, composeStyle, lintStyle, sanitizeArt, renderStill, resolveColor, checkRecipe, styleFromSpec, TRAITS, WEARABLES } from "../packages/awesome-agent-avatars/dist/author.js";
+import { applyEdit, carryTraits, describeStyle, deriveStyle, fillGradient, composeStyle, lintStyle, sanitizeArt, renderStill, resolveColor, resolveWearable, checkRecipe, styleFromSpec, TRAITS, WEARABLES } from "../packages/awesome-agent-avatars/dist/author.js";
 import { PROPS } from "../packages/awesome-agent-avatars/dist/index.js";
 import { micah } from "../packages/awesome-agent-avatars/dist/styles/micah.js";
 import { avataaars } from "../packages/awesome-agent-avatars/dist/styles/avataaars.js";
@@ -130,6 +130,67 @@ test("lint refuses scripts and missing credit; sanitize strips them", async () =
   assert.deepEqual(ok.filter((i) => i.level === "error"), []);
 });
 
+test("lint and sanitize read markup the way innerHTML does: slash- and quote-separated handlers, any-quoted hrefs", async () => {
+  const faces = [
+    '<svg viewBox="0 0 10 10"><g class="aav-part-eyes"/><img/src="x"/onerror=alert(1)></svg>',
+    "<svg viewBox=\"0 0 10 10\"><g class=\"aav-part-eyes\"/><a href='java&#115;cript:alert(1)'><rect width=\"10\" height=\"10\"/></a></svg>",
+    "<svg viewBox=\"0 0 10 10\"><g class=\"aav-part-eyes\"/><image href='https://tracker.example/p.png'/></svg>",
+    '<svg viewBox="0 0 10 10"><g class="aav-part-eyes"/><a><set attributeName="href" to="java&#115;cript:alert(1)"/></a></svg>',
+  ];
+  for (const face of faces) {
+    const style = { id: "t", name: "T", tier: "parts", credit: { author: "a", license: "MIT" }, fields: [], defaults: () => ({}), render: () => ({ id: "t", tier: "parts", faces: { neutral: face } }) };
+    assert.ok((await lintStyle(style)).some((i) => i.code === "unsafe"), `lint passed ${face}`);
+    const clean = sanitizeArt(style.render()).faces.neutral;
+    assert.ok(!/onerror|javascript|href=|tracker\.example|attributeName/i.test(clean), `sanitize left ${clean}`);
+  }
+  for (const s of STYLES) {
+    assert.deepEqual((await lintStyle(s)).filter((i) => i.level === "error"), [], `${s.id} must still lint clean`);
+    const art = await s.render(s.defaults());
+    assert.deepEqual(sanitizeArt(art).faces, art.faces, `sanitize must not touch ${s.id}`);
+  }
+});
+
+test("a data style stays inert: markup in a colour or a layer name is refused when the package loads", () => {
+  const resolve = (id) => STYLES.find((s) => s.id === id);
+  const evil = '#fff"/></linearGradient></defs><img/src="x"/onerror=alert(1)><defs><linearGradient a="';
+  assert.throws(() => styleFromSpec({ kind: "derive", id: "g", name: "G", from: "gaze", gradient: { replace: "#7c3aee", stops: [evil, "#000"] } }, resolve), /not a hex colour/);
+  assert.throws(() => styleFromSpec({ kind: "derive", id: "g", name: "G", from: "gaze", recolor: { "#9cc8fb": evil } }, resolve), /not a hex colour/);
+  assert.throws(() => styleFromSpec({ kind: "derive", id: "g", name: "G", from: "gaze", recolor: { ".": "#000000" } }, resolve), /not a hex colour/);
+  assert.throws(() => styleFromSpec({ kind: "compose", id: "c", name: "C", base: "micah", layers: [{ from: "avataaars", part: "top", field: "topVariant", key: 'hat"><img/src="x"/onerror=alert(1)><g a="', fit: "crown" }] }, resolve), /plain name/);
+  assert.throws(() => styleFromSpec({ kind: "compose", id: "c", name: "C", base: "micah", layers: [{ from: "avataaars", part: "top", field: "topVariant", key: "hat", fit: "crown", hides: [".*"] }] }, resolve), /plain name/);
+});
+
+test("two asks on one field: the later wins and the earlier is reported, and a later \"none\" keeps what the edit set", () => {
+  // Avataaars draws hair and headwear with one field, topVariant
+  const both = applyEdit(avataaars, avataaars.defaults(), { traits: { hairStyle: "long curly", hat: "beanie" } });
+  assert.match(both.options.topVariant, /^winterHat/);
+  assert.deepEqual(both.applied.map((c) => c.trait), ["hat"]);
+  assert.deepEqual(both.rejected.map((x) => x.trait), ["hairStyle"]);
+  const hairNoHat = applyEdit(avataaars, avataaars.defaults(), { traits: { hairStyle: "long curly", hat: "none" } });
+  assert.equal(hairNoHat.options.topVariant, "curly");
+  // a style with separate hair and hat fields (as Nice Avatar has), switched to Avataaars: long hair and no hat stay long hair
+  const twoFields = { id: "two", name: "Two", tier: "parts", credit: { author: "a", license: "MIT" }, traits: { hairStyle: "hair", hat: "hat" }, defaults: () => ({ hair: "long", hat: "none" }), render: () => ({ id: "two", tier: "parts", faces: { neutral: "<svg/>" } }),
+    fields: [{ key: "hair", label: "Hair", type: "select", options: [{ value: "long", label: "Long", tags: ["long", "curly"] }] }, { key: "hat", label: "Hat", type: "select", options: [{ value: "none", label: "None" }, { value: "beanie", label: "Beanie" }] }] };
+  const carried = carryTraits(twoFields, { hair: "long", hat: "none" }, avataaars);
+  assert.equal(carried.options.topVariant, "curly");
+  assert.deepEqual(carried.carried, ["hairStyle", "hat"]);
+  const hatWins = carryTraits(twoFields, { hair: "long", hat: "beanie" }, avataaars);
+  assert.match(hatWins.options.topVariant, /^winterHat/);
+  assert.deepEqual(hatWins.lost, ["hairStyle"]);
+});
+
+test("worn props: a worn id is removed by that id, and a word that matches nothing is reported", () => {
+  const off = applyEdit(micah, micah.defaults(), { unwear: ["hat"] }, { wear: ["hat", "cap"] });
+  assert.deepEqual(off.wear, ["cap"]);
+  const none = applyEdit(micah, micah.defaults(), { unwear: ["tiara"] }, { wear: ["cap"] });
+  assert.deepEqual(none.wear, ["cap"]);
+  assert.equal(none.rejected[0].key, "wear");
+  assert.equal(resolveWearable(""), null);
+  assert.equal(resolveWearable("t"), null);
+  assert.equal(resolveWearable("a red cap"), "cap");
+  assert.equal(resolveWearable("knit"), "beanie");
+});
+
 test("renderStill and checkRecipe", async () => {
   assert.match(await renderStill(gaze, gaze.defaults(), "happy"), /^<svg/);
   const good = checkRecipe({ v: 1, style: "micah", options: micah.defaults(), wear: ["cap"] }, micah);
@@ -167,5 +228,17 @@ test("the aav CLI: new → edit → switch → check → render → lint, from a
     assert.match(refused.stdout, /✗ unsafe:/);
     const list = JSON.parse(run("styles", "--styles", path.join(dir, "styles"), "--json"));
     assert.ok(list.some((s) => s.id === "sunset") && list.some((s) => s.id === "blob"));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("the aav CLI runs from an install path with a space in it", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "aav space-"));
+  const pkg = path.resolve("packages/awesome-agent-avatars");
+  try {
+    const home = path.join(dir, "My Projects", "awesome-agent-avatars");
+    cpSync(path.join(pkg, "bin"), path.join(home, "bin"), { recursive: true });
+    cpSync(path.join(pkg, "dist"), path.join(home, "dist"), { recursive: true });
+    symlinkSync(path.resolve("node_modules"), path.join(dir, "My Projects", "node_modules"), "dir");
+    assert.match(execFileSync(process.execPath, [path.join(home, "bin", "aav.mjs"), "styles"], { encoding: "utf8" }), /^micah/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
