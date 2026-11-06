@@ -72,8 +72,10 @@ export interface Credit {
 }
 
 /** An editor field. Values are plain JSON so a recipe can be saved anywhere. */
+/** A select option. `tags` are plain words an agent or a search box can match ("short", "curly", "hat"). */
+export interface FieldOption { value: string; label: string; tags?: string[] }
 export type Field =
-  | { key: string; label: string; type: "select"; options: { value: string; label: string }[]; group?: string }
+  | { key: string; label: string; type: "select"; options: FieldOption[]; group?: string }
   | { key: string; label: string; type: "color"; swatches: string[]; group?: string }
   | { key: string; label: string; type: "toggle"; group?: string }
   | { key: string; label: string; type: "text"; placeholder?: string; group?: string };
@@ -90,10 +92,27 @@ export interface AvatarStyle<O extends StyleOptions = StyleOptions> {
   fields: Field[];
   defaults(seed?: string): O;
   render(options: O): StyleArt | Promise<StyleArt>;
+  /** Which field carries each cross-style trait (see `TRAITS`); a trait left out is one the style cannot express. */
+  traits?: TraitMap;
+  /** Where this style came from, for styles made by composing or deriving others. */
+  provenance?: { kind: "derive" | "compose" | "module"; from: string[]; by?: string; at?: string };
 }
 
+/** The cross-style vocabulary: what "hair colour" or "a hat" means in any style. */
+export type TraitName =
+  | "skin" | "hairStyle" | "hairColor" | "facialHair" | "glasses" | "hat" | "hatColor"
+  | "topStyle" | "topColor" | "eyeColor" | "earrings" | "shape" | "bodyColor";
+export type TraitMap = Partial<Record<TraitName, string>>;
+
 /** A saved avatar: which style and which options. Store it anywhere (JSON). */
-export interface AvatarRecipe { v: 1; style: string; options: StyleOptions; name?: string }
+export interface AvatarRecipe {
+  v: 1;
+  style: string;
+  options: StyleOptions;
+  name?: string;
+  /** worn props drawn on the avatar in every state: "cap", "beanie", "hat", "headphones", "bow", "cape", "crystal" */
+  wear?: string[];
+}
 
 // ---------------- motion ----------------
 export type Ease = "io" | "in" | "out" | "lin" | [number, number, number, number];
@@ -189,6 +208,8 @@ export interface AvatarOptions {
   injectStyles?: boolean;
   /** render one frame and never animate (thumbnails, screenshots) */
   static?: boolean;
+  /** props worn in every state (a recipe's `wear`); states add their own on top */
+  wear?: string[];
   onState?: (state: string) => void;
 }
 export interface InteractionOptions {
@@ -228,6 +249,9 @@ export interface BotAvatar {
   setArt(art: StyleArt): void;
   /** show a prop for a while */
   flash(prop: string, seconds?: number): void;
+  /** props worn in every state (identity, not mood); replaces the current list */
+  setWear(props: string[]): void;
+  readonly wear: readonly string[];
   /** advance by hand (tests, thumbnails) */
   simulate(seconds: number): void;
   destroy(): void;

@@ -51,6 +51,7 @@ export const nice = defineStyle<Opts>({
   name: "Nice Avatar",
   tier: "parts",
   credit: { author: "Dapi", authorUrl: "https://github.com/dapi-labs", source: "react-nice-avatar", sourceUrl: "https://github.com/dapi-labs/react-nice-avatar", license: "MIT", licenseUrl: "https://github.com/dapi-labs/react-nice-avatar/blob/main/LICENSE" },
+  traits: { skin: "faceColor", hairStyle: "hairStyle", hairColor: "hairColor", hat: "hatStyle", hatColor: "hatColor", glasses: "glassesStyle", topStyle: "shirtStyle", topColor: "shirtColor" },
   fields: [
     sel("sex", "Body", ["woman", "man"], "Face"),
     col("faceColor", "Skin", ["#F9C9B6", "#E8B796", "#D39972", "#AC6651", "#8D5524", "#5C3A21"], "Face"),

@@ -156,6 +156,7 @@ interface Internal extends Live, CursorSource {
   ptr: { x: number; y: number; hold: number; want: number }; pokes: PokeState[];
   drag: { on: boolean; x: number; y: number; vx: number; vy: number; tx: number; ty: number; sw: number; sv: number; gx: number; gy: number; prev: string | null };
   unit: number; compact: boolean; anchored: boolean; backside: boolean; artStyle: StyleArt; anchors: Anchors | undefined;
+  worn: string[];
   lastAttention: number; wakeTo: string | null; autoBored: number; noBlink: boolean;
   miniArt(): string;
 }
@@ -184,6 +185,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
     ptr: { x: 0, y: 0, hold: 0, want: 0 }, pokes: [],
     drag: { on: false, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, sw: 0, sv: 0, gx: 0, gy: 0, prev: null },
     unit: 1, compact: false, anchored: false, backside: false, artStyle: art, anchors: undefined, lastAttention: 0, wakeTo: null,
+    worn: (opts.wear || []).filter((p) => PROPS[p]),
     autoBored: opts.autoSleep === false ? 0 : opts.autoSleep?.bored ?? 45, noBlink: !!opts.static, reduced: false,
     // filled in below, once the helpers they call exist
     step: () => {},
@@ -250,7 +252,7 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
 
   // ---- props ----
   function propIds() {
-    const rec = STATES[a.state], want = new Set<string>(([] as string[]).concat(rec.prop || [], rec.wear || []));
+    const rec = STATES[a.state], want = new Set<string>(([] as string[]).concat(rec.prop || [], rec.wear || [], a.worn));
     for (const [id, until] of Object.entries(a.flashes)) if (a.T < until) want.add(id);
     if (want.has("cape")) want.add("bow");
     return want;
@@ -458,6 +460,8 @@ export function createAvatar(root: HTMLElement, art: StyleArt, opts: AvatarOptio
       if (a.reduced) { a.pokes = []; a.lookS = null; a.reactS = null; a.clip.t = 0; a.bridge = null; a.blinkT = 0; const keep = a.T; a.step(0); a.T = keep; } else wake();
     },
     setArt: (next) => { applyArt(next); a.quietProps = true; syncProps(); a.quietProps = false; a.step(0); },
+    setWear: (props) => { a.worn = props.filter((p) => PROPS[p]); syncProps(); },
+    get wear() { return a.worn; },
     flash,
     simulate: (secs) => { for (let i = 0; i < secs * 60; i++) a.step(1 / 60); },
     destroy: () => { live.delete(a); byRoot.delete(root); io?.unobserve(root); ro?.disconnect(); detach(); for (const el of a.propEls.values()) el.remove(); root.replaceChildren(); root.classList.remove("aav-av"); },

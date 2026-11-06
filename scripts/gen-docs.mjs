@@ -17,5 +17,5 @@ md += `\n## Reactions\n\nShort moments layered over any state: \`avatar.react(na
 for (const [n, r] of Object.entries(REACTIONS)) md += `| \`${n}\` | ${(r.props || []).join(", ")} | ${(r.pokes || []).join(", ")} |\n`;
 writeFileSync(root + "docs/states.md", md);
 writeFileSync(root + "skills/awesome-agent-avatars/references/states.md", md);
-for (const f of ["styles.md", "motion.md", "frameworks.md"]) copyFileSync(root + "docs/" + f, root + "skills/awesome-agent-avatars/references/" + f);
+for (const f of ["styles.md", "motion.md", "frameworks.md", "authoring.md"]) copyFileSync(root + "docs/" + f, root + "skills/awesome-agent-avatars/references/" + f);
 console.log("wrote docs/states.md and the skill references");

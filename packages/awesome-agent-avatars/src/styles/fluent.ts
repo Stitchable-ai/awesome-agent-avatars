@@ -34,6 +34,7 @@ export function fluentStyle(o: { baseUrl?: string } = {}): AvatarStyle<{ charact
       { key: "character", label: "Character", type: "select", options: HEADS.map((n) => ({ value: n, label: n.replace(/^(Woman|Man|Person) /, "$1, ") })) },
       { key: "tone", label: "Skin tone", type: "select", options: TONES.map((t) => ({ value: t, label: t.replace("-", " ") })) },
     ],
+    traits: { skin: "tone", hairStyle: "character" },
     defaults: () => ({ character: "Woman", tone: "Default", src: "" }),
     render: async (opts) => {
       const tone = TONES.includes(opts.tone) ? opts.tone : "Default";

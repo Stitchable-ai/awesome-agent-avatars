@@ -6,7 +6,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 
 const here = new URL(".", import.meta.url).pathname;
 rmSync(here + "dist", { recursive: true, force: true });
-const entries = ["index", "react", "dicebear", "styles/micah", "styles/avataaars", "styles/gaze", "styles/nice", "styles/fluent"];
+const entries = ["index", "author", "react", "dicebear", "styles/micah", "styles/avataaars", "styles/gaze", "styles/nice", "styles/fluent"];
 await build({
   absWorkingDir: here,
   entryPoints: Object.fromEntries(entries.map((e) => [e, `src/${e}.${e === "react" ? "tsx" : "ts"}`])),
@@ -32,5 +32,9 @@ writeFileSync(r, '"use client";\n' + readFileSync(r, "utf8").replace(/^"use clie
 const { stylesheet } = await import(here + "src/css.ts").catch(async () => ({ stylesheet: (await import(here + "dist/index.js")).stylesheet }));
 mkdirSync(here + "dist", { recursive: true });
 writeFileSync(here + "dist/styles.css", stylesheet + "\n");
+// the recipe file's schema, for editors and hosts that validate avatar.json themselves
+const { RECIPE_SCHEMA } = await import(here + "dist/author.js");
+mkdirSync(here + "schema", { recursive: true });
+writeFileSync(here + "schema/avatar.schema.json", JSON.stringify(RECIPE_SCHEMA, null, 2) + "\n");
 execFileSync(process.execPath, [here + "../../node_modules/typescript/bin/tsc", "-p", here + "tsconfig.json"], { stdio: "inherit" });
 console.log("built", entries.length, "entries");

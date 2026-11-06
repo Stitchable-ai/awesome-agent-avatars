@@ -18,7 +18,7 @@ const show = (cmd, args, cwd = dir) => execFileSync(cmd, args, { cwd, stdio: "in
 try {
   const [packed] = JSON.parse(capture("npm", ["pack", "--json", "--pack-destination", dir], pkgDir));
   const files = packed.files.map((f) => f.path);
-  const must = ["package.json", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "dist/index.js", "dist/react.js", "dist/dicebear.js", "dist/styles.css", "dist/types/index.d.ts", "dist/types/react.d.ts", "dist/styles/micah.js", "dist/types/styles/fluent.d.ts"];
+  const must = ["package.json", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "dist/index.js", "dist/author.js", "bin/aav.mjs", "schema/avatar.schema.json", "dist/react.js", "dist/dicebear.js", "dist/styles.css", "dist/types/index.d.ts", "dist/types/react.d.ts", "dist/styles/micah.js", "dist/types/styles/fluent.d.ts"];
   for (const f of must) if (!files.includes(f)) throw new Error(`the tarball lacks ${f}`);
   for (const f of files) if (/^(src|node_modules|tests)\//.test(f)) throw new Error(`the tarball leaks ${f}`);
   console.log(`packed ${packed.filename}: ${files.length} files, ${(packed.size / 1024).toFixed(0)} KB`);
@@ -30,13 +30,19 @@ try {
 
   // every entry imports without a DOM, and the state list matches the pack
   show(process.execPath, ["--input-type=module", "-e", `
-    const entries = ["awesome-agent-avatars", "awesome-agent-avatars/react", "awesome-agent-avatars/dicebear", ...["micah", "avataaars", "gaze", "nice", "fluent"].map((s) => "awesome-agent-avatars/styles/" + s)];
+    const entries = ["awesome-agent-avatars", "awesome-agent-avatars/author", "awesome-agent-avatars/react", "awesome-agent-avatars/dicebear", ...["micah", "avataaars", "gaze", "nice", "fluent"].map((s) => "awesome-agent-avatars/styles/" + s)];
     for (const e of entries) { const m = await import(e); if (!Object.keys(m).length) throw new Error(e + " exports nothing"); }
     const { defaultMotion, STATE_NAMES } = await import("awesome-agent-avatars");
     const have = Object.keys(defaultMotion.states).sort().join(), want = [...STATE_NAMES].sort().join();
     if (have !== want) throw new Error("STATE_NAMES disagrees with the pack");
     console.log("imported " + entries.length + " entries in Node without a DOM");
   `]);
+
+  // the aav CLI, as an agent with a shell reaches it from an installed copy
+  writeFileSync(path.join(dir, "avatar.json"), JSON.stringify({ v: 1, style: "micah", options: {}, wear: [] }));
+  const edited = JSON.parse(capture("npx", ["--no-install", "aav", "edit", "avatar.json", "--trait", "hairColor=blue", "--wear", "cap", "--json"]));
+  if (edited.recipe.options.hairColor !== "#3b82f6" || edited.recipe.wear[0] !== "cap") throw new Error("aav edit did not apply from the installed tarball");
+  console.log("ran the installed aav CLI: " + edited.applied.map((c) => c.label).join(", "));
 
   // the type tests, against the installed copy
   cpSync(path.join(root, "tests/types"), path.join(dir, "types"), { recursive: true });

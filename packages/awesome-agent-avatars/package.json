@@ -9,6 +9,8 @@
   ],
   "files": [
     "dist",
+    "bin",
+    "schema",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"
@@ -19,6 +21,10 @@
     ".": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./author": {
+      "types": "./dist/types/author.d.ts",
+      "import": "./dist/author.js"
     },
     "./react": {
       "types": "./dist/types/react.d.ts",
@@ -49,10 +55,17 @@
       "import": "./dist/styles/fluent.js"
     },
     "./styles.css": "./dist/styles.css",
+    "./schema/avatar.schema.json": "./schema/avatar.schema.json",
     "./package.json": "./package.json"
+  },
+  "bin": {
+    "aav": "./bin/aav.mjs"
   },
   "typesVersions": {
     "*": {
+      "author": [
+        "./dist/types/author.d.ts"
+      ],
       "react": [
         "./dist/types/react.d.ts"
       ],

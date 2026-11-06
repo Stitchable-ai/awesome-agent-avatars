@@ -4,7 +4,7 @@
 // Peer dependency: @dicebear/core (and @dicebear/styles for the presets).
 import { Avatar, Style } from "@dicebear/core";
 import type { StyleDefinition } from "@dicebear/core";
-import type { AvatarStyle, Credit, FaceName, Field, StyleArt, StyleOptions } from "./types.js";
+import type { AvatarStyle, Credit, FaceName, Field, StyleArt, StyleOptions, TraitMap } from "./types.js";
 
 /** What this adapter reads from a DiceBear style definition (`@dicebear/styles/<name>.json`). */
 export interface DicebearDefinition {
@@ -34,9 +34,11 @@ export function creditOf(def: Definition): Credit {
 }
 
 /** A select field from a component's variants. `optional` adds "None" (probability 0). */
-export function variantField(def: Definition, component: string, label: string, o: { optional?: boolean; group?: string; only?: string[] } = {}): Field {
+export function variantField(def: Definition, component: string, label: string, o: { optional?: boolean; group?: string; only?: string[]; tags?: Record<string, string[]> } = {}): Field {
   const names = Object.keys(def.components[component]?.variants || {}).filter((v) => !o.only || o.only.includes(v));
-  return { key: `${component}Variant`, label, type: "select", group: o.group, options: [...(o.optional ? [{ value: "none", label: "None" }] : []), ...names.map((v) => ({ value: v, label: words(v) }))] };
+  // plain words an agent can match: the name's words (longHairCurly → long, hair, curly), or hand-written ones for opaque names
+  const tagsOf = (v: string) => o.tags?.[v] || words(v).toLowerCase().replace(/([a-z])([0-9])/g, "$1 $2").split(/\s+/).filter(Boolean);
+  return { key: `${component}Variant`, label, type: "select", group: o.group, options: [...(o.optional ? [{ value: "none", label: "None", tags: ["none"] }] : []), ...names.map((v) => ({ value: v, label: words(v), tags: tagsOf(v) }))] };
 }
 /** A colour field from a palette in the definition, plus extra swatches. */
 export function colorField(def: Definition, color: string, label: string, o: { extra?: string[]; group?: string } = {}): Field {
@@ -57,6 +59,8 @@ export interface DicebearPreset<O extends StyleOptions> {
   /** which option holds skin / sleeve colour (for app-drawn hands) */
   skinKey?: string;
   sleeveKey?: string;
+  /** cross-style traits → this style's field keys */
+  traits?: TraitMap;
   art?: Omit<StyleArt, "id" | "tier" | "faces">;
 }
 
@@ -74,7 +78,7 @@ export function dicebearStyle<O extends StyleOptions>(p: DicebearPreset<O>): Ava
     return out;
   };
   return {
-    id: p.id, name: p.name, tier: "parts", credit: creditOf(p.definition), fields: p.fields, defaults: p.defaults,
+    id: p.id, name: p.name, tier: "parts", credit: creditOf(p.definition), fields: p.fields, defaults: p.defaults, traits: p.traits,
     render(options) {
       const common = { ...(p.base || {}), ...toDicebear(options) };
       const faces: Record<string, string> = {};

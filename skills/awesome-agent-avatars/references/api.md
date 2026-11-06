@@ -14,9 +14,26 @@
 | `randomOptions`, `normalizeOptions`, `createStyleRegistry`, `groupFields` | the editing interface. |
 | `injectStyles(doc?)`, `stylesheet` | CSS (also `awesome-agent-avatars/styles.css`). |
 
+## `awesome-agent-avatars/author` (agents and editors; no DOM needed except where noted)
+
+| Export | |
+|---|---|
+| `describeStyle(style, options?)` | every field, `free` (any value) or enumerated, options with `tags`, `traits`, wearable props, what the style `cannot` do |
+| `applyEdit(style, options, { traits?, fields?, wear?, unwear? }, { palette?, styles?, wear? })` | `{ options, wear, applied, rejected, switchable }`: nothing is dropped silently |
+| `carryTraits(from, options, to)` | a style switch that keeps the look: `{ options, carried, lost }` |
+| `resolveColor(text, palette?)`, `resolveOption(field, value)`, `resolveWearable(word)` | the matching rules `applyEdit` uses |
+| `deriveStyle(base, spec)`, `fillGradient(art, color, stops, angle?)` | a new style from one style |
+| `composeStyle({ id, name, base, layers })` | parts of several styles on one head (measured in the browser; pass `measure` elsewhere) |
+| `styleFromSpec(json, resolve)` | a style from a data package (`{ kind: "derive" | "compose", … }`) |
+| `lintStyle(style)`, `sanitizeArt(art)` | check and clean a style before registering it |
+| `renderStill(style | art, options?, face?)`, `stillDataUrl(…)` | one face as markup or a data URL |
+| `checkRecipe(recipe, style)`, `RECIPE_SCHEMA`, `TRAITS`, `WEARABLES` | the recipe file, validated |
+
+CLI: `aav styles | describe | new | edit | switch | check | render | lint | style new` (`--json` for machine output). Guide: [authoring.md](authoring.md).
+
 ## `BotAvatar`
 
-`state`, `setState(id, { quiet? })`, `react(name, seconds?)`, `poke("spin" | "bounce" | "nod" | "wiggle" | "shake" | "jolt", { turns? })`, `look("left" | "right" | "up" | "down" | "center", seconds?)`, `moment(face, seconds?)`, `holdFace(face | null)`, `setPointer(x, y, weight)`, `grab(x, y)`, `dragTo(x, y)`, `release()`, `attend()`, `setGlow(on)`, `setReducedMotion(on)`, `setArt(art)` (hot-swap, keeps the state), `flash(prop, seconds?)`, `simulate(seconds)`, `destroy()`.
+`state`, `setState(id, { quiet? })`, `react(name, seconds?)`, `poke("spin" | "bounce" | "nod" | "wiggle" | "shake" | "jolt", { turns? })`, `look("left" | "right" | "up" | "down" | "center", seconds?)`, `moment(face, seconds?)`, `holdFace(face | null)`, `setPointer(x, y, weight)`, `grab(x, y)`, `dragTo(x, y)`, `release()`, `attend()`, `setGlow(on)`, `setReducedMotion(on)`, `setArt(art)` (hot-swap, keeps the state), `setWear(props)` and `wear` (props worn in every state), `flash(prop, seconds?)`, `simulate(seconds)`, `destroy()`.
 
 ## `awesome-agent-avatars/react`
 
@@ -32,7 +49,7 @@ Add your own state names to autocomplete (a plain string works without this):
 declare module "awesome-agent-avatars" { interface CustomStateNames { deploying: true } }
 ```
 
-Also: `BotAvatar`, `AvatarOptions`, `InteractionOptions`, `AgentPresence`, `StyleArt`, `AvatarStyle<O>`, `StyleOptions`, `AvatarRecipe`, `Field`, `Credit`, `Anchors`, `StyleRegistry`, `PictureStyleConfig`, `PropDef`, `MotionPack`, `StateRecipe`, `Clip`, `Key<V>`, `Ease`, `Pose`; `DicebearDefinition`, `DicebearPreset<O>` from `awesome-agent-avatars/dicebear`; `AgentAvatarProps` from `awesome-agent-avatars/react`.
+Also: `BotAvatar`, `AvatarOptions`, `InteractionOptions`, `AgentPresence`, `StyleArt`, `AvatarStyle<O>`, `StyleOptions`, `AvatarRecipe` (`{ v, style, options, name?, wear? }`), `TraitName`, `TraitMap`, `FieldOption` (`{ value, label, tags? }`), `Field`, `Credit`, `Anchors`, `StyleRegistry`, `PictureStyleConfig`, `PropDef`, `MotionPack`, `StateRecipe`, `Clip`, `Key<V>`, `Ease`, `Pose`; `DicebearDefinition`, `DicebearPreset<O>` from `awesome-agent-avatars/dicebear`; `AgentAvatarProps` from `awesome-agent-avatars/react`.
 
 ## Styles
 
